@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<head>
+  <script
+    type="text/javascript"
+    src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"
+  ></script>
+  <script type="text/javascript" src="./general.js"></script>
+  <script type="text/javascript" src="./system_data/fish.js"></script>
+  <script type="text/javascript" src="./system_data/bugs.js"></script>
+  <script type="text/javascript" src="./event_listener_callbacks.js"></script>
+  <script type="text/javascript" src="./html_helpers.js"></script>
+  <script type="text/javascript" src="./home.js"></script>
+  <script type="text/javascript" src="./critters.js"></script>
+  <script type="text/javascript" src="./auth.js"></script>
+  <script type="text/javascript" src="./login.js"></script>
+  <!-- <script type="text/javascript" src="./test.js"></script> -->
+  <!-- <script type="text/javascript" src="./test2.js"></script> -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="menu">
+    <div
+      id="context-menu-icon"
+      onclick="$('#context-menu').toggleClass('display-hidden')"
+    >
+      <div id="context-menu" class="display-hidden">
+        <div class="context-menu-row" onclick="clearCookies(); loadLogin()">
+          Log Out
+        </div>
+      </div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="active-menu-item" onclick="switchMainContent(event, 'home')">
+      <img src="images/home.png" /><span>Home</span>
+    </div>
+    <div onclick="switchMainContent(event, 'critters')">
+      <img src="images/net.png" /><span>Critters</span>
+    </div>
+  </div>
+  <div id="main-content"></div>
+</body>
