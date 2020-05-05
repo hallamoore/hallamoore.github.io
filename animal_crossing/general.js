@@ -1,11 +1,10 @@
-let session, username;
+let session;
 const URL =
   "https://script.google.com/macros/s/AKfycbwss-g3ov3Om7UcOqXRIEqWcsudrI27YqGBt0Jm0REz_EmEjbY/exec";
 
 $(document).ready(function () {
-  session = getCookie("session");
-  username = getCookie("username");
-  if (!session || !username) {
+  session = getCookie();
+  if (!session) {
     loadLogin();
   } else {
     loadHome();
@@ -22,6 +21,12 @@ const ITEM_TYPES = {
 function wrapWithErrorCheck(successCallback) {
   function wrapped(data, textStatus, jqXHR) {
     if (data.error) {
+      if (data.error === "Error: Unauthorized") {
+        alert("You have been logged out from somewhere else");
+        logout(false);
+        loadLogin();
+        return;
+      }
       return this.error(jqXHR, "server-side script error", data.error);
     }
 
@@ -89,7 +94,7 @@ function fetchUserData(itemType, appendHTML = true, onSuccess = () => {}) {
     data: JSON.stringify({
       session,
       action: "getUserData",
-      actionArgs: [username, itemType],
+      actionArgs: [itemType],
     }),
     success: wrapWithErrorCheck(function (data, textStatus, jqXHR) {
       let localStorage = window.localStorage;

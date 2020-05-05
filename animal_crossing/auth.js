@@ -1,9 +1,9 @@
-function getCookie(name) {
+function getCookie() {
   if (document.cookie === "") {
     return;
   }
   let cookies = document.cookie.split(";");
-  let prefix = `${name}=`;
+  let prefix = "session=";
   for (let cookie of cookies) {
     cookie = cookie.trim();
     if (cookie.startsWith(prefix)) {
@@ -12,15 +12,37 @@ function getCookie(name) {
   }
 }
 
-function setCookie(name, value, expiresAt) {
+function setCookie(value, expiresAt) {
   expiresAt = new Date(expiresAt);
   expiresAt = expiresAt.toUTCString();
-  document.cookie = `${name}=${value};expires=${expiresAt}`;
+  document.cookie = `session=${value};expires=${expiresAt}`;
 }
 
-function clearCookies() {
+function logout(postToServer = true) {
   let expiresAt = new Date();
   expiresAt = expiresAt.toUTCString();
-  setCookie("session", "", expiresAt);
-  setCookie("username", "", expiresAt);
+  setCookie("", expiresAt);
+
+  if (!postToServer) {
+    // If the server told us the session was unauthorized, no need to ask the
+    // server to remove the session.
+    return;
+  }
+
+  $.ajax({
+    method: "POST",
+    url: URL,
+    dataType: "json",
+    data: JSON.stringify({
+      session,
+      action: "logout",
+    }),
+    success: wrapWithErrorCheck(function (data, textStatus, jqXHR) {
+      // Do nothing, but still have function here so that it can be wrapped with error check
+    }),
+    error: function (jqXHR, textStatus, errorString) {
+      console.log(textStatus, errorString);
+      alert("Couldn't delete session on server");
+    },
+  });
 }

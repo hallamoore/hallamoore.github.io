@@ -15,7 +15,7 @@ function onAttrChange(e) {
     data: JSON.stringify({
       session,
       action: "updateAttr",
-      actionArgs: [username, itemType, itemId, itemName, attrName, attrValue],
+      actionArgs: [itemType, itemId, itemName, attrName, attrValue],
     }),
     success: wrapWithErrorCheck(function (data, textStatus, jqXHR) {
       // Do nothing, but still include callback in case the wrapped error check

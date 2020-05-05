@@ -1,10 +1,12 @@
 function loadLogin() {
   $("body").html(
     `
-    <div id='login-form'>
-      <input id='username' placeholder='username'></input><br/>
-      <input id='password' type='password' placeholder='password'></input>
-      <button id='login-submit' onclick='login()'>Log in</button>
+    <div id='login-form-container'>
+      <div id='login-form'>
+        <input id='username' placeholder='username'></input><br/>
+        <input id='password' type='password' placeholder='password'></input>
+        <button id='login-submit' onclick='login()'>Log in</button>
+      </div>
     </div>
   `
   );
@@ -34,9 +36,8 @@ function login() {
       actionArgs: [username, $("#password").val()],
     }),
     success: wrapWithErrorCheck(function (data, textStatus, jqXHR) {
-      setCookie("session", data.session, data.expiresAt);
-      setCookie("username", username, data.expiresAt);
       session = data.session;
+      setCookie(session, data.expiresAt);
       $("body").html(`
         <div class="menu">
           <div
@@ -44,7 +45,7 @@ function login() {
             onclick="$('#context-menu').toggleClass('display-hidden')"
           >
             <div id="context-menu" class="display-hidden">
-              <div class="context-menu-row" onclick="clearCookies(); loadLogin()">
+              <div class="context-menu-row" onclick="logout(); loadLogin()">
                 Log Out
               </div>
             </div>
