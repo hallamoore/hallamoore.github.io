@@ -12,24 +12,30 @@ body {
 
 #login-form-container {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+  flex-grow: 1;
 }
 
 #login-form {
   display: flex;
   flex-direction: column;
-  max-width: 400px;
+  max-width: min(75vw, 50vh);
   padding-bottom: 100px;
+  flex-grow: 1;
 }
 
 #login-form > input,
 #login-form > button {
-  margin: 3px 0;
-  height: 35px;
-  padding: 0 10px;
-  font-size: 20px;
+  margin: 0.5vh;
+  padding: 7px 15px;
+  font-size: max(2vh, 20px);
+  min-height: 50px;
+  min-width: 250px;
+  height: 5vh;
+  border-radius: 10px;
+  border: solid 1px gray;
+  box-sizing: border-box;
 }
 
 #login-form > button:hover {
@@ -37,7 +43,12 @@ body {
 }
 
 #login-form > button {
-  height: 40px;
+  background-color: #3598bf;
+  color: white;
+}
+
+#login-form > button[disabled] {
+  background-color: #70b8d5;
 }
 
 #unauthorized {
@@ -45,8 +56,8 @@ body {
   color: #7d2d00;
   padding: 5px;
   text-align: center;
-  border-radius: 5px;
-  margin: 5px 0;
+  border-radius: 10px;
+  margin: 5px;
 }
 
 .menu {

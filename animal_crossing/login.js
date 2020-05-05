@@ -3,15 +3,13 @@ function loadLogin() {
     `
     <div id='login-form-container'>
       <div id='login-form'>
-        <input id='username' placeholder='username'></input><br/>
+        <input id='username' placeholder='username'></input>
         <input id='password' type='password' placeholder='password'></input>
         <button id='login-submit' onclick='login()'>Log in</button>
-        <div id='debug'>resolution</div>
       </div>
     </div>
   `
   );
-  $("#debug").html(`Resolution: ${$(window).width()}x${$(window).height()}`);
   listenToEnter();
 }
 
