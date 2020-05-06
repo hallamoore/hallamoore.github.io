@@ -5,6 +5,7 @@ body {
   font-size: 20px;
   margin: 0px;
   display: flex;
+  flex-direction: column;
   height: 100vh;
   overflow: auto;
   justify-content: center;
@@ -62,16 +63,18 @@ body {
 
 .menu {
   display: flex;
-  flex-direction: column;
   background-color: #094e77;
   z-index: 1;
   color: white;
   text-align: center;
   font-size: 14px;
+  order: 1;
+  flex-direction: row;
 }
 
 .menu img {
-  width: 50px;
+  width: 30px;
+  height: 30px;
 }
 
 .menu > div {
@@ -90,16 +93,17 @@ body {
 #context-menu-icon {
   padding: 5px;
   flex-grow: 0;
+  order: 1;
 }
 
 #context-menu {
   position: absolute;
   background-color: white;
   color: black;
-  top: 0;
-  left: 74px;
   box-shadow: 2px 2px 2px black;
   font-size: 16px;
+  bottom: 81px;
+  right: 0px;
 }
 
 .context-menu-row {
@@ -117,36 +121,37 @@ body {
 
 #main-content {
   width: 100%;
+  height: calc(100vh - 70px);
 }
 
-@media (orientation: portrait) {
+@media (orientation: landscape) {
   body {
-    flex-direction: column;
-  }
-
-  .menu {
-    order: 1;
     flex-direction: row;
   }
 
+  .menu {
+    order: 0;
+    flex-direction: column;
+  }
+
   .menu img {
-    width: 30px;
-    height: 30px;
+    width: 50px;
+    height: auto;
   }
 
   #context-menu-icon {
-    order: 1;
+    order: 0;
   }
 
   #context-menu {
-    top: auto;
-    left: auto;
-    bottom: 81px;
-    right: 0px;
+    top: 0;
+    left: 74px;
+    bottom: auto;
+    right: auto;
   }
 
   #main-content {
-    height: calc(100vh - 70px);
+    height: auto;
   }
 }
 
