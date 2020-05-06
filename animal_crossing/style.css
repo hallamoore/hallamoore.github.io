@@ -3,6 +3,11 @@
   --vw: 1vw;
 }
 
+html {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
 body {
   /* background-color: #4e99ea; */
   background-color: #57d5b1;
@@ -11,8 +16,8 @@ body {
   margin: 0px;
   display: flex;
   flex-direction: column;
-  height: calc(100 * var(--vh));
-  overflow: auto;
+  height: 100%;
+  overflow: hidden;
   justify-content: center;
 }
 
