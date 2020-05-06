@@ -20,12 +20,19 @@ function formatAttrCheckbox(itemType, itemId, attrName, checked) {
           <label for='${checkboxId}' class='icon'></label>`;
 }
 
+function toTitleCase(string) {
+  return string
+    .split(" ")
+    .map((x) => x[0].toUpperCase() + x.substr(1))
+    .join(" ");
+}
+
 function appendFish(id, fish) {
   $("#page").append(
     `<div class='item-container'>
       <div class='simple-item-content'>
         <img src="${fish.iconUrl}" class='item-icon'/>
-        <span class='item-name'>${fish.name}</span>
+        <span class='item-name'>${toTitleCase(fish.name)}</span>
         ${formatAttrCheckbox("fish", id, "caught", fish.caught)}
         ${formatAttrCheckbox("fish", id, "donated", fish.donated)}
         <img src="images/info.png" class='icon info'/>
@@ -47,7 +54,7 @@ function appendBug(id, bug) {
     `<div class='item-container'>
       <div class='simple-item-content'>
         <img src="${bug.iconUrl}" class='item-icon'/>
-        <span class='item-name'>${bug.name}</span>
+        <span class='item-name'>${toTitleCase(bug.name)}</span>
         ${formatAttrCheckbox("bug", id, "caught", bug.caught)}
         ${formatAttrCheckbox("bug", id, "donated", bug.donated)}
         <img src="images/info.png" class='icon info'/>
