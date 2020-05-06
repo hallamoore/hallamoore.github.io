@@ -226,9 +226,9 @@ body {
   background-color: #addeea;
   padding: 10px 0px;
   border-radius: 0 0 10px 10px;
-  font-size: 18px;
+  font-size: max(1.5vh, 18px);
   transition: height 0.5s;
-  height: 265px; /* Needed for height transition */
+  height: max(18.75vh, 255px); /* Needed for height transition */
   overflow: hidden;
 }
 
