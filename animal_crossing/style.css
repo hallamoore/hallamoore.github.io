@@ -1,18 +1,14 @@
-:root {
-  --vh: 1vh;
-  --vw: 1vw;
-}
-
 html {
   margin: 0;
   height: 100%;
   overflow: hidden;
 }
+
 body {
   /* background-color: #4e99ea; */
   background-color: #57d5b1;
   font-family: "Open Sans";
-  font-size: max(calc(2 * var(--vh)), 20px);
+  font-size: max(2vh, 20px);
   margin: 0px;
   display: flex;
   flex-direction: column;
@@ -31,18 +27,18 @@ body {
 #login-form {
   display: flex;
   flex-direction: column;
-  max-width: min(calc(75 * var(--vw)), calc(50 * var(--vh)));
+  max-width: min(75vw, 50vh);
   padding-bottom: 100px;
   flex-grow: 1;
 }
 
 #login-form > input,
 #login-form > button {
-  margin: calc(0.5 * var(--vh));
+  margin: 0.5vh;
   padding: 7px 15px;
   min-height: 50px;
   min-width: 250px;
-  height: calc(5 * var(--vh));
+  height: 5vh;
   border-radius: 10px;
   border: solid 1px gray;
   box-sizing: border-box;
@@ -76,14 +72,14 @@ body {
   z-index: 1;
   color: white;
   text-align: center;
-  font-size: max(14px, calc(1.5 * var(--vh)));
+  font-size: max(14px, 1.5vh);
   order: 1;
   flex-direction: row;
 }
 
 .menu img {
-  width: max(30px, calc(4 * var(--vh)));
-  height: max(30px, calc(4 * var(--vh)));
+  width: max(30px, 4vh);
+  height: max(30px, 4vh);
 }
 
 .menu > div {
@@ -100,7 +96,7 @@ body {
 }
 
 #context-menu-icon {
-  padding: 5px max(5px, calc(2 * var(--vw)));
+  padding: 5px max(5px, 2vw);
   flex-grow: 0;
   order: 1;
 }
@@ -177,7 +173,7 @@ body {
   text-align: center;
   background-color: #3598bf;
   color: #addeea;
-  padding: max(calc(1.75 * var(--vh)), 10px);
+  padding: max(1.75vh, 10px);
 }
 
 .tab:not(.active-tab):hover {
@@ -266,7 +262,7 @@ body {
 .item-name {
   flex-grow: 1;
   margin: 10px;
-  font-size: max(calc(2 * var(--vh)), 20px);
+  font-size: max(2vh, 20px);
 }
 
 .display-hidden {
@@ -277,10 +273,10 @@ body {
   background-repeat: no-repeat;
   background-size: contain;
   background-color: #f2935d;
-  width: max(calc(5 * var(--vh)), 44px);
-  height: max(calc(5 * var(--vh)), 44px);
+  width: max(5vh, 44px);
+  height: max(5vh, 44px);
   display: inline-block;
-  border-radius: max(calc(2.5 * var(--vh)), 22px);
+  border-radius: max(2.5vh, 22px);
   box-shadow: 1px 2px 1px #864018;
   margin: 5px;
   -webkit-touch-callout: none;
@@ -298,7 +294,7 @@ body {
 }
 
 .item-icon {
-  height: max(calc(7 * var(--vh)), 55px);
+  height: max(7vh, 55px);
   margin: 5px;
 }
 
