@@ -40,15 +40,12 @@ function login() {
       setCookie(session, data.expiresAt);
       $("body").html(`
         <div class="menu">
-          <div
-            id="context-menu-icon"
-            onclick="$('#context-menu').toggleClass('display-hidden')"
-          >
-            <div id="context-menu" class="display-hidden">
-              <div class="context-menu-row" onclick="logout(); loadLogin()">
-                Log Out
-              </div>
+          <div id="context-menu" style="display: none;">
+            <div class="context-menu-row" onclick="logout(); loadLogin()">
+              Log Out
             </div>
+          </div>
+          <div id="context-menu-icon" onclick="openContextMenu(event)">
             <div class="dot"></div>
             <div class="dot"></div>
             <div class="dot"></div>
