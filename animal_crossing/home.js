@@ -16,7 +16,16 @@ function loadHome() {
         ${formatProgressRow(ITEM_TYPES.Fish, "Fish")}
         ${formatProgressRow(ITEM_TYPES.Bug, "Bugs")}
       </div>
-    </div>`
+    </div>` +
+      `
+    <div>
+    clientHeight: <span id='a'>${document.documentElement.clientHeight}</span></br>
+    innerHeight: <span id='b'>${window.innerHeight}</span><br/>
+    <br/>
+    clientWidth: <span id='c'>${document.documentElement.clientWidth}</span></br>
+    innerWidth: <span id='d'>${window.innerWidth}</span><br/>
+    </div>
+    `
   );
 }
 

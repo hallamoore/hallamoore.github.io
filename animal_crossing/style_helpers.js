@@ -8,5 +8,9 @@ function setViewportCSSVars() {
 function listenForResize() {
   $(window).resize(() => {
     setViewportCSSVars();
+    $("#a").html(document.documentElement.clientHeight);
+    $("#b").html(window.innerHeight);
+    $("#c").html(document.documentElement.clientWidth);
+    $("#d").html(window.innerWidth);
   });
 }
