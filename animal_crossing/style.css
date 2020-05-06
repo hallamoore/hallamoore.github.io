@@ -8,7 +8,7 @@ body {
   /* background-color: #4e99ea; */
   background-color: #57d5b1;
   font-family: "Open Sans";
-  font-size: max(2vh, 20px);
+  font-size: max(2.5vh, 20px);
   margin: 0px;
   display: flex;
   flex-direction: column;
@@ -72,14 +72,14 @@ body {
   z-index: 1;
   color: white;
   text-align: center;
-  font-size: max(14px, 1.5vh);
+  font-size: max(14px, 2vh);
   order: 1;
   flex-direction: row;
 }
 
 .menu img {
-  width: max(30px, 4vh);
-  height: max(30px, 4vh);
+  width: max(30px, 4.5vh);
+  height: max(30px, 4.5vh);
 }
 
 .menu > div {
@@ -226,9 +226,9 @@ body {
   background-color: #addeea;
   padding: 10px 0px;
   border-radius: 0 0 10px 10px;
-  font-size: max(1.5vh, 18px);
+  font-size: max(2vh, 18px);
   transition: height 0.5s;
-  height: max(18.75vh, 255px); /* Needed for height transition */
+  height: max(24vh, 255px); /* Needed for height transition */
   overflow: hidden;
 }
 
@@ -245,7 +245,7 @@ body {
 }
 
 .key {
-  width: 20%;
+  width: 25%;
   min-width: 130px;
   padding: 5px 25px;
   border-radius: 10px 0 0 10px;
@@ -262,7 +262,6 @@ body {
 .item-name {
   flex-grow: 1;
   margin: 10px;
-  font-size: max(2vh, 20px);
 }
 
 .display-hidden {
@@ -273,10 +272,10 @@ body {
   background-repeat: no-repeat;
   background-size: contain;
   background-color: #f2935d;
-  width: max(5vh, 44px);
-  height: max(5vh, 44px);
+  width: max(5.5vh, 44px);
+  height: max(5.5vh, 44px);
   display: inline-block;
-  border-radius: max(2.5vh, 22px);
+  border-radius: max(2.75vh, 22px);
   box-shadow: 1px 2px 1px #864018;
   margin: 5px;
   -webkit-touch-callout: none;
@@ -294,7 +293,7 @@ body {
 }
 
 .item-icon {
-  height: max(7vh, 55px);
+  height: max(7.5vh, 55px);
   margin: 5px;
 }
 
