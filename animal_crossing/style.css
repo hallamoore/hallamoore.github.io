@@ -124,37 +124,6 @@ body {
   height: calc(100vh - 70px);
 }
 
-@media (orientation: landscape) {
-  body {
-    flex-direction: row;
-  }
-
-  .menu {
-    order: 0;
-    flex-direction: column;
-  }
-
-  .menu img {
-    width: 50px;
-    height: auto;
-  }
-
-  #context-menu-icon {
-    order: 0;
-  }
-
-  #context-menu {
-    top: 0;
-    left: 74px;
-    bottom: auto;
-    right: auto;
-  }
-
-  #main-content {
-    height: auto;
-  }
-}
-
 .active-menu-item {
   background-color: #70b8d5;
   border-radius: 20px;
@@ -233,7 +202,6 @@ body {
   background-color: #ffffff;
   margin: 10px;
   width: 100%;
-  max-width: 450px;
   border-radius: 15px;
 }
 
@@ -287,6 +255,7 @@ body {
 .item-name {
   flex-grow: 1;
   margin: 10px;
+  font-size: max(2vh, 20px);
 }
 
 .display-hidden {
@@ -297,10 +266,10 @@ body {
   background-repeat: no-repeat;
   background-size: contain;
   background-color: #f2935d;
-  width: 44px;
-  height: 44px;
+  width: max(5vh, 44px);
+  height: max(5vh, 44px);
   display: inline-block;
-  border-radius: 22px;
+  border-radius: max(2.5vh, 22px);
   box-shadow: 1px 2px 1px #864018;
   margin: 5px;
   -webkit-touch-callout: none;
@@ -318,7 +287,7 @@ body {
 }
 
 .item-icon {
-  height: 44px;
+  height: max(7vh, 55px);
   margin: 5px;
 }
 
@@ -337,4 +306,39 @@ input[data-attr-name="caught"] + .icon {
 
 input[data-attr-name="donated"] + .icon {
   background-image: url("images/museum.png");
+}
+
+@media (orientation: landscape) {
+  body {
+    flex-direction: row;
+  }
+
+  .menu {
+    order: 0;
+    flex-direction: column;
+  }
+
+  .menu img {
+    width: 50px;
+    height: auto;
+  }
+
+  #context-menu-icon {
+    order: 0;
+  }
+
+  #context-menu {
+    top: 0;
+    left: 74px;
+    bottom: auto;
+    right: auto;
+  }
+
+  #main-content {
+    height: auto;
+  }
+
+  .item-container {
+    max-width: 450px;
+  }
 }
