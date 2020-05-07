@@ -37,6 +37,7 @@ function wrapWithErrorCheck(successCallback) {
 }
 
 let alreadyLoadedUserData = {};
+let currentCritterTabType;
 
 function loadItems(
   itemType,
@@ -64,6 +65,8 @@ function loadItems(
     // the existing html instead of appending new html
     fetchUserData(itemType, false, onFetchedDataReady);
   }
+
+  currentCritterTabType = itemType;
 }
 
 function switchTab(e, tabName) {

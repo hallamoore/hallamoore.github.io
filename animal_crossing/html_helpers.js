@@ -29,7 +29,7 @@ function toTitleCase(string) {
 
 function appendFish(id, fish) {
   $("#page").append(
-    `<div class='item-container'>
+    `<div class='item-container' id='${id}'>
       <div class='simple-item-content'>
         <img src="${fish.iconUrl}" class='item-icon'/>
         <span class='item-name'>${toTitleCase(fish.name)}</span>
@@ -51,7 +51,7 @@ function appendFish(id, fish) {
 
 function appendBug(id, bug) {
   $("#page").append(
-    `<div class='item-container'>
+    `<div class='item-container' id='${id}'>
       <div class='simple-item-content'>
         <img src="${bug.iconUrl}" class='item-icon'/>
         <span class='item-name'>${toTitleCase(bug.name)}</span>
