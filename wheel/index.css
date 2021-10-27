@@ -1,0 +1,40 @@
+html,
+body {
+  height: 100vh;
+  width: 100vw;
+  font-family: sans-serif;
+}
+
+.container {
+  border-collapse: collapse;
+}
+
+.cell {
+  padding: 0;
+  border: solid black 5px;
+  font-size: 50px;
+  text-align: center;
+  user-select: none;
+}
+
+.cell img {
+  display: block;
+  pointer-events: none;
+}
+
+.spacer {
+  visibility: hidden;
+  border-left-color: transparent;
+}
+
+.spacer.top {
+  border-top-color: transparent;
+}
+
+.spacer.bottom {
+  border-bottom-color: transparent;
+}
+
+.highlighted {
+  background-color: #3366ff;
+}
