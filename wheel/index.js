@@ -24,6 +24,9 @@ let currentPuzzleIndex = -1;
 
 function nextPuzzle() {
   currentPuzzleIndex++;
+  if (currentPuzzleIndex >= puzzles.length) {
+    currentPuzzleIndex = 0;
+  }
   const puzzle = puzzles[currentPuzzleIndex];
 
   document.querySelector("#category").innerText = puzzle.category.toUpperCase();
@@ -91,7 +94,9 @@ window.onkeydown = ev => {
         solvePuzzle();
         break;
       case "Control":
-        nextPuzzle();
+        if (Object.keys(cellsByChar).length === 0) {
+          nextPuzzle();
+        }
         break;
       default:
         guessLetter(ev.key);
