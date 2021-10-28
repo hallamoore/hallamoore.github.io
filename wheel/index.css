@@ -13,6 +13,15 @@ body {
   justify-content: center;
 }
 
+#spin-value {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  padding: 10px;
+}
+
 .container {
   border-collapse: collapse;
 }
@@ -70,7 +79,7 @@ body {
 }
 
 #player-container {
-  margin-top: 40px;
+  margin-top: 10px;
   display: flex;
   align-items: center;
   margin-bottom: 10vh;

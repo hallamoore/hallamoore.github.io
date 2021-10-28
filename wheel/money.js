@@ -7,6 +7,7 @@ function changeMoneyPerLetter(value) {
 
   function _changeMoneyPerLetter(_value) {
     currentMoneyPerLetter = _value;
+    document.querySelector("#spin-value").children[0].innerText = `$${_value}`;
   }
 
   _changeMoneyPerLetter(value);
