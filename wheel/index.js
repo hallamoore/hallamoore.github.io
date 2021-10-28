@@ -15,12 +15,12 @@ window.onkeydown = ev => {
       changeMoneyPerLetter(parseInt(ev.key) * 100);
     } else if (ev.key.match(/^[a-zA-Z]$/) && !ev.ctrlKey) {
       guessLetter(ev.key);
+    } else if (ev.key === "y" && ev.ctrlKey) {
+      redo();
     }
   }
   if (ev.key === "z" && ev.ctrlKey) {
     undo();
-  } else if (ev.key === "y" && ev.ctrlKey) {
-    redo();
   }
 };
 
