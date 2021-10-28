@@ -1,160 +1,3 @@
-const puzzles = [
-  {
-    category: "before & after",
-    data: "zendesk ticket to ride"
-  },
-  {
-    category: "before & after",
-    data: "barcode read a book"
-  },
-  {
-    category: "best sellers",
-    data: "hpit torch with hsll"
-  },
-  {
-    category: "best sellers",
-    data: "dataman and insight"
-  },
-  {
-    category: "family",
-    data: "David and Jay Negro"
-  },
-  {
-    category: "occupation",
-    data: "Minister of Culture"
-  },
-  {
-    category: "occupation",
-    data: "Director of Products"
-  },
-  {
-    category: "place",
-    data: "Frisbee field"
-  },
-  {
-    category: "place",
-    data: "Aachen Germany"
-  },
-  {
-    category: "place",
-    data: "Cogercise Room"
-  },
-  {
-    category: "rhyme time",
-    data: "kite light at night"
-  },
-  {
-    category: "rhyme time",
-    data: "wren again"
-  },
-  {
-    category: "rhyme time",
-    data: "design a myna"
-  },
-  {
-    category: "rhyme time",
-    data: "eddie the yeti"
-  },
-  {
-    category: "values",
-    data: "sharing and integrity"
-  },
-  {
-    category: "values",
-    data: "creativity and enthusiasm"
-  },
-  {
-    category: "values",
-    data: "customer first and pride"
-  },
-  {
-    category: "what are you doing?",
-    data: "work hard"
-  },
-  {
-    category: "what are you doing?",
-    data: "play hard"
-  },
-  {
-    category: "what are you doing?",
-    data: "moving too fast"
-  }
-];
-
-const emptyShortRow = [];
-const emptyLongRow = [];
-for (let i = 0; i < 12; i++) {
-  emptyShortRow.push("_");
-  emptyLongRow.push("_");
-}
-for (let i = 0; i < 2; i++) {
-  emptyLongRow.push("_");
-}
-
-function createPuzzleLayout(input) {
-  const words = input.split(" ");
-  const rows = [];
-  let row = "";
-  for (let word of words) {
-    if (row.length + 1 + word.length < 12) {
-      row += " " + word;
-    } else {
-      const remainingChars = 12 - row.length;
-      const x = remainingChars / 2.0;
-      const a = Math.floor(x);
-      const b = Math.ceil(x);
-      row = row.padStart(row.length + a, " ");
-      row = row.padEnd(row.length + b, " ");
-      row = row.replaceAll(" ", "_");
-      rows.push(row.split(""));
-      row = word;
-    }
-  }
-
-  const remainingChars = 12 - row.length;
-  const x = remainingChars / 2.0;
-  const a = Math.floor(x);
-  const b = Math.ceil(x);
-  console.log(remainingChars, x, a, b);
-  row = row.padStart(row.length + a, " ");
-  row = row.padEnd(row.length + b, " ");
-  row = row.replaceAll(" ", "_");
-  rows.push(row.split(""));
-
-  console.log("a", rows);
-  switch (rows.length) {
-    case 1:
-      return [
-        emptyShortRow,
-        ["_", ...rows[0], "_"],
-        emptyLongRow,
-        emptyShortRow
-      ];
-      break;
-    case 2:
-      return [
-        emptyShortRow,
-        ["_", ...rows[0], "_"],
-        ["_", ...rows[1], "_"],
-        emptyShortRow
-      ];
-      break;
-    case 3:
-      return [
-        rows[0],
-        ["_", ...rows[1], "_"],
-        ["_", ...rows[2], "_"],
-        emptyLongRow
-      ];
-      break;
-    case 4:
-      return rows;
-      break;
-    default:
-      throw Error("More than 4 rows");
-  }
-}
-
 let cellsByChar = {};
 let currentPuzzleIndex = -1;
 
@@ -163,22 +6,19 @@ function nextPuzzle() {
   if (currentPuzzleIndex >= puzzles.length) {
     currentPuzzleIndex = 0;
   }
+
   const puzzle = puzzles[currentPuzzleIndex];
-  const puzzleChars = createPuzzleLayout(puzzle.data);
-  console.log(puzzleChars);
+  const puzzleLayout = createPuzzleLayout(puzzle.data);
 
   document.querySelector("#category").innerText = puzzle.category.toUpperCase();
+
   cellsByChar = {};
   const rows = document.querySelectorAll("tr");
-
   for (let i = 0; i < rows.length; i++) {
-    if (puzzleChars.length <= i) break;
-    const puzzleRow = puzzleChars[i];
+    const puzzleRow = puzzleLayout[i];
     const cells = rows[i].querySelectorAll("td");
 
     for (let j = 0; j < cells.length; j++) {
-      if (puzzleRow.length <= j) break;
-      const char = puzzleRow[j].toUpperCase();
       const cell = cells[j];
       cell.onclick = null;
 
@@ -188,6 +28,7 @@ function nextPuzzle() {
       }
 
       const img = cell.querySelector("img");
+      const char = puzzleRow[j].toUpperCase();
       if (char === "_") {
         img.src = "unused_cell.png";
       } else {
@@ -199,6 +40,38 @@ function nextPuzzle() {
       }
     }
   }
+}
+
+function createPuzzleLayout(input) {
+  let rows = justify(input, 12);
+
+  if (rows.length === 1) {
+    const words = rows[0].split(" ");
+    if (words.length > 1) {
+      // Let's split this up into two rows
+      const numChars = rows[0].replaceAll(" ", "").length;
+      const maxWordLength = Math.max(...words.map(word => word.length));
+      const shorterLineLength = Math.max(
+        Math.ceil(numChars / 2),
+        maxWordLength
+      );
+      rows = justify(input, shorterLineLength);
+    }
+  }
+
+  const maxLength = Math.max(...rows.map(r => r.length));
+  const numStartPadding = Math.ceil((14 - maxLength) / 2);
+
+  rows = rows.map(row =>
+    row
+      .padStart(row.length + numStartPadding, "_")
+      .padEnd(14, "_")
+      .replaceAll(" ", "_")
+      .split("")
+  );
+
+  const emptyRow = repeatArray(14, "_");
+  return padStartAndEnd(rows, 4, emptyRow, { favorStartPadding: false });
 }
 
 function guessLetter(char) {
