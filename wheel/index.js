@@ -1,16 +1,31 @@
-const testPuzzle = {
-  category: "phrase",
-  chars: [
-    ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
-    ["_", "_", "_", "T", "H", "I", "S", "_", "I", "S", "_", "_", "_", "_"],
-    ["_", "_", "_", "_", "A", "_", "T", "E", "S", "T", "_", "_", "_", "_"],
-    ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"]
-  ]
-};
+const puzzles = [
+  {
+    category: "phrase",
+    chars: [
+      ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+      ["_", "_", "_", "T", "H", "I", "S", "_", "I", "S", "_", "_", "_", "_"],
+      ["_", "_", "_", "_", "A", "_", "T", "E", "S", "T", "_", "_", "_", "_"],
+      ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"]
+    ]
+  },
+  {
+    category: "place",
+    chars: [
+      ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+      ["_", "_", "_", "B", "A", "C", "K", "Y", "A", "R", "D", "_", "_", "_"],
+      ["_", "_", "_", "_", "P", "A", "T", "I", "O", "_", "_", "_", "_", "_"],
+      ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"]
+    ]
+  }
+];
 
 let cellsByChar = {};
+let currentPuzzleIndex = -1;
 
-function initPuzzle(puzzle) {
+function nextPuzzle() {
+  currentPuzzleIndex++;
+  const puzzle = puzzles[currentPuzzleIndex];
+
   document.querySelector("#category").innerText = puzzle.category.toUpperCase();
   cellsByChar = {};
   const rows = document.querySelectorAll("tr");
@@ -25,6 +40,11 @@ function initPuzzle(puzzle) {
       const char = puzzleRow[j].toUpperCase();
       const cell = cells[j];
       cell.onclick = null;
+
+      if (cell.childNodes.length == 2) {
+        // This cell had text appended to it as part of the last puzzle. Remove that text.
+        cell.childNodes[1].remove();
+      }
 
       const img = cell.querySelector("img");
       if (char === "_") {
@@ -52,14 +72,34 @@ function guessLetter(char) {
       cell.onclick = null;
     };
   }
+  delete cellsByChar[char];
 }
 
-window.onkeypress = ev => {
+function solvePuzzle() {
+  for (let [char, cells] of Object.entries(cellsByChar)) {
+    for (let cell of cells) {
+      cell.append(char);
+    }
+  }
+  cellsByChar = {};
+}
+
+window.onkeydown = ev => {
   if (document.querySelectorAll(".highlighted").length === 0) {
-    guessLetter(ev.key);
+    switch (ev.key) {
+      case "Enter":
+        solvePuzzle();
+        break;
+      case "Control":
+        nextPuzzle();
+        break;
+      default:
+        guessLetter(ev.key);
+        break;
+    }
   }
 };
 
 window.onload = () => {
-  initPuzzle(testPuzzle);
+  nextPuzzle();
 };
