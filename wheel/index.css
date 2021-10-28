@@ -78,7 +78,6 @@ body {
 }
 
 .player {
-  flex-grow: 1;
   color: white;
   font-size: 30px;
   font-weight: bold;
@@ -89,6 +88,7 @@ body {
   padding: 20px;
   text-align: center;
   box-sizing: border-box;
+  text-shadow: 3px 3px 3px black, -1px -1px 1px black;
 }
 
 #player1 {
@@ -101,4 +101,28 @@ body {
 
 #player3 {
   background-image: url("player3.png");
+}
+
+.money {
+  display: flex;
+  justify-content: center;
+}
+
+.flip-digit {
+  height: 38px;
+  line-height: 38px;
+  overflow-y: hidden;
+}
+
+.number-card {
+  height: 100%;
+  /*
+  The text-shadow overflows and overflow is hidden, so there's a sharp cutoff line through the
+  shadow. I can't seem to get overflow-x to be visible while overflow-y is hidden. Instead, just set
+  the width of the div to be wide enough for the shadow. But the inherited shadow is a bit too wide.
+  Having to finish the shadow before starting the next character leaves awkward spacing between the
+  digits. Reduce the first shadow by a pixel so the width can be a bit smaller.
+ */
+  width: 25px;
+  text-shadow: 2px 2px 3px black, -1px -1px 1px black;
 }
