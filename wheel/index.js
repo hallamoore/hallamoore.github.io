@@ -2,7 +2,7 @@ window.onkeydown = ev => {
   if (document.querySelectorAll(".highlighted").length === 0) {
     if (ev.key === "Enter") {
       solvePuzzle();
-    } else if (ev.key === "Control" && Object.keys(cellsByChar).length === 0) {
+    } else if (ev.key === "Tab" && Object.keys(cellsByChar).length === 0) {
       nextPuzzle();
     } else if (ev.key === ",") {
       changePlayer(1);
@@ -12,10 +12,15 @@ window.onkeydown = ev => {
       changePlayer(3);
       ev.preventDefault();
     } else if (ev.key.match(/^\d$/)) {
-      currentMoneyPerLetter = parseInt(ev.key) * 100;
-    } else if (ev.key.match(/^[a-zA-Z]$/)) {
+      changeMoneyPerLetter(parseInt(ev.key) * 100);
+    } else if (ev.key.match(/^[a-zA-Z]$/) && !ev.ctrlKey) {
       guessLetter(ev.key);
     }
+  }
+  if (ev.key === "z" && ev.ctrlKey) {
+    undo();
+  } else if (ev.key === "y" && ev.ctrlKey) {
+    redo();
   }
 };
 
@@ -27,4 +32,6 @@ window.onload = () => {
   }
 
   changePlayer(1);
+
+  clearUndoRedoHistory();
 };

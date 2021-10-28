@@ -2,14 +2,42 @@ let currentPlayer = 1;
 let currentMoneyPerLetter = 0;
 const moneyByPlayerId = {};
 
-function changePlayer(playerId) {
-  currentPlayer = playerId;
-  for (let node of document.querySelectorAll(".current-player")) {
-    node.classList.remove("current-player");
+function changeMoneyPerLetter(value) {
+  const previousValue = currentMoneyPerLetter;
+
+  function _changeMoneyPerLetter(_value) {
+    currentMoneyPerLetter = _value;
   }
-  document
-    .querySelector(`#player${playerId}`)
-    .parentElement.classList.add("current-player");
+
+  _changeMoneyPerLetter(value);
+
+  recordAction({
+    redo: () => _changeMoneyPerLetter(value),
+    undo: () => _changeMoneyPerLetter(previousValue)
+  });
+}
+
+function changePlayer(playerId) {
+  const previousPlayerId = currentPlayer;
+
+  function _changePlayer(_playerId) {
+    currentPlayer = _playerId;
+
+    for (let node of document.querySelectorAll(".current-player")) {
+      node.classList.remove("current-player");
+    }
+
+    document
+      .querySelector(`#player${_playerId}`)
+      .parentElement.classList.add("current-player");
+  }
+
+  _changePlayer(playerId);
+
+  recordAction({
+    redo: () => _changePlayer(playerId),
+    undo: () => _changePlayer(previousPlayerId)
+  });
 }
 
 function nextPlayer() {
@@ -161,30 +189,39 @@ class Money {
   }
 
   incrementBy(incr) {
-    const previousValue = this.value();
-    const nextValue = previousValue + incr;
-    const nextValueDigits = nextValue
-      .toString()
-      .split("")
-      .map(d => parseInt(d));
-    const numDigitDiff =
-      nextValueDigits.length - previousValue.toString().length;
+    const _incrementBy = _incr => {
+      const previousValue = this.value();
+      const nextValue = previousValue + _incr;
+      const nextValueDigits = nextValue
+        .toString()
+        .split("")
+        .map(d => parseInt(d));
+      const numDigitDiff =
+        nextValueDigits.length - previousValue.toString().length;
 
-    if (incr > 0) {
-      for (let i = 0; i < numDigitDiff; i++) {
-        this.prependFlipDigit();
-      }
-      for (let i = 0; i < nextValueDigits.length; i++) {
-        this.flipDigits[i].flipForwardTo(nextValueDigits[i]);
-      }
-    } else {
-      for (let i = numDigitDiff; i < 0; i++) {
-        this.popFlipDigit();
-      }
+      if (_incr > 0) {
+        for (let i = 0; i < numDigitDiff; i++) {
+          this.prependFlipDigit();
+        }
+        for (let i = 0; i < nextValueDigits.length; i++) {
+          this.flipDigits[i].flipForwardTo(nextValueDigits[i]);
+        }
+      } else {
+        for (let i = numDigitDiff; i < 0; i++) {
+          this.popFlipDigit();
+        }
 
-      for (let i = 0; i < nextValueDigits.length; i++) {
-        this.flipDigits[i].flipBackwardsTo(nextValueDigits[i]);
+        for (let i = 0; i < nextValueDigits.length; i++) {
+          this.flipDigits[i].flipBackwardsTo(nextValueDigits[i]);
+        }
       }
-    }
+    };
+
+    _incrementBy(incr);
+
+    recordAction({
+      redo: () => _incrementBy(incr),
+      undo: () => _incrementBy(-incr)
+    });
   }
 }

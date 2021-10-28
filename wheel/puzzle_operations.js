@@ -1,45 +1,66 @@
 let cellsByChar = {};
 let currentPuzzleIndex = -1;
 
-function nextPuzzle() {
-  currentPuzzleIndex++;
-  if (currentPuzzleIndex >= puzzles.length) {
-    currentPuzzleIndex = 0;
+function removeTextFromCell(cell) {
+  // The first node is the img
+  if (cell.childNodes.length == 2) {
+    cell.childNodes[1].remove();
   }
+}
 
-  const puzzle = puzzles[currentPuzzleIndex];
-  const puzzleLayout = createPuzzleLayout(puzzle.data);
+function nextPuzzle() {
+  const previousIndex = currentPuzzleIndex;
+  let nextIndex = (currentPuzzleIndex + 1) % puzzles.length;
 
-  document.querySelector("#category").innerText = puzzle.category.toUpperCase();
+  function _nextPuzzle(index) {
+    currentPuzzleIndex = index;
+    const puzzle = puzzles[currentPuzzleIndex];
+    const puzzleLayout = createPuzzleLayout(puzzle.data);
 
-  cellsByChar = {};
-  const rows = document.querySelectorAll("tr");
-  for (let i = 0; i < rows.length; i++) {
-    const puzzleRow = puzzleLayout[i];
-    const cells = rows[i].querySelectorAll("td");
+    document.querySelector(
+      "#category"
+    ).innerText = puzzle.category.toUpperCase();
 
-    for (let j = 0; j < cells.length; j++) {
-      const cell = cells[j];
-      cell.onclick = null;
+    cellsByChar = {};
+    const rows = document.querySelectorAll("tr");
+    for (let i = 0; i < rows.length; i++) {
+      const puzzleRow = puzzleLayout[i];
+      const cells = rows[i].querySelectorAll("td");
 
-      if (cell.childNodes.length == 2) {
-        // This cell had text appended to it as part of the last puzzle. Remove that text.
-        cell.childNodes[1].remove();
-      }
+      for (let j = 0; j < cells.length; j++) {
+        const cell = cells[j];
+        cell.onclick = null;
+        removeTextFromCell(cell);
 
-      const img = cell.querySelector("img");
-      const char = puzzleRow[j].toUpperCase();
-      if (char === "_") {
-        img.src = "unused_cell.png";
-      } else {
-        if (!cellsByChar[char]) {
-          cellsByChar[char] = [];
+        const img = cell.querySelector("img");
+        const char = puzzleRow[j].toUpperCase();
+        if (char === "_") {
+          img.src = "unused_cell.png";
+        } else {
+          if (!cellsByChar[char]) {
+            cellsByChar[char] = [];
+          }
+          cellsByChar[char].push(cell);
+          img.src = "";
         }
-        cellsByChar[char].push(cell);
-        img.src = "";
       }
     }
   }
+
+  _nextPuzzle(nextIndex);
+
+  recordAction({
+    redo: () => _nextPuzzle(nextIndex),
+    undo: () => {
+      _nextPuzzle(previousIndex);
+      for (let [char, cells] of Object.entries(cellsByChar)) {
+        for (let cell of cells) {
+          cell.append(char);
+        }
+      }
+      cellsByChar = {};
+    }
+  });
 }
 
 function createPuzzleLayout(input) {
@@ -76,33 +97,70 @@ function createPuzzleLayout(input) {
 
 function guessLetter(char) {
   char = char.toUpperCase();
-  if (!cellsByChar[char]) {
+  const cells = cellsByChar[char];
+  if (!cells) {
     nextPlayer();
     return;
   }
 
+  openActionGroup();
+
   if (["A", "E", "I", "O", "U"].includes(char)) {
     deductVowelCost();
   } else {
-    rewardMoney(cellsByChar[char].length);
+    rewardMoney(cells.length);
   }
 
-  for (let cell of cellsByChar[char]) {
-    cell.classList.add("highlighted");
-    cell.onclick = () => {
-      cell.append(char);
+  function doAction() {
+    for (let cell of cells) {
+      cell.classList.add("highlighted");
+      cell.onclick = () => {
+        cell.append(char);
+        cell.classList.remove("highlighted");
+        cell.onclick = null;
+      };
+    }
+    delete cellsByChar[char];
+  }
+
+  function undoAction() {
+    for (let cell of cells) {
       cell.classList.remove("highlighted");
       cell.onclick = null;
-    };
+      removeTextFromCell(cell);
+    }
+    cellsByChar[char] = cells;
   }
-  delete cellsByChar[char];
+
+  doAction();
+
+  recordAction({ redo: doAction, undo: undoAction });
+
+  closeActionGroup();
 }
 
 function solvePuzzle() {
-  for (let [char, cells] of Object.entries(cellsByChar)) {
-    for (let cell of cells) {
-      cell.append(char);
+  const previousCellsByChar = { ...cellsByChar };
+
+  function doAction() {
+    for (let [char, cells] of Object.entries(cellsByChar)) {
+      for (let cell of cells) {
+        cell.append(char);
+      }
     }
+    cellsByChar = {};
   }
-  cellsByChar = {};
+
+  function undoAction() {
+    for (let [char, cells] of Object.entries(previousCellsByChar)) {
+      for (let cell of cells) {
+        removeTextFromCell(cell);
+      }
+    }
+    cellsByChar = previousCellsByChar;
+  }
+
+  doAction();
+
+  recordAction({ redo: doAction, undo: undoAction });
 }
