@@ -18,16 +18,18 @@ body {
 
 .cell {
   padding: 0;
-  border: solid black 5px;
+  border: solid gray 3px;
   font-size: 50px;
   text-align: center;
   user-select: none;
   background-color: white;
+  box-shadow: inset 5px 5px black, inset -5px -5px black;
 }
 
 .cell img {
   display: block;
   pointer-events: none;
+  margin: 5px;
 }
 
 .spacer {
