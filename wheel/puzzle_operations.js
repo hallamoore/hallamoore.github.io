@@ -99,44 +99,52 @@ function guessLetter(char) {
   char = char.toUpperCase();
   const cells = cellsByChar[char];
   if (!cells) {
+    buzzerAudio.play();
     nextPlayer();
     return;
   }
 
   openActionGroup();
+  try {
+    if (["A", "E", "I", "O", "U"].includes(char)) {
+      deductVowelCost();
+    } else {
+      rewardMoney(cells.length);
+    }
 
-  if (["A", "E", "I", "O", "U"].includes(char)) {
-    deductVowelCost();
-  } else {
-    rewardMoney(cells.length);
-  }
+    async function doAction() {
+      for (let i = 0; i < cells.length; i++) {
+        const cell = cells[i];
+        if (!dingAudios[i]) {
+          dingAudios.push(new Audio("./ding.mp3"));
+        }
+        dingAudios[i].play();
+        cell.classList.add("highlighted");
+        cell.onclick = () => {
+          cell.append(char);
+          cell.classList.remove("highlighted");
+          cell.onclick = null;
+        };
+        await new Promise(res => setTimeout(res, 1000));
+      }
+      delete cellsByChar[char];
+    }
 
-  function doAction() {
-    for (let cell of cells) {
-      cell.classList.add("highlighted");
-      cell.onclick = () => {
-        cell.append(char);
+    function undoAction() {
+      for (let cell of cells) {
         cell.classList.remove("highlighted");
         cell.onclick = null;
-      };
+        removeTextFromCell(cell);
+      }
+      cellsByChar[char] = cells;
     }
-    delete cellsByChar[char];
+
+    doAction();
+
+    recordAction({ redo: doAction, undo: undoAction });
+  } finally {
+    closeActionGroup();
   }
-
-  function undoAction() {
-    for (let cell of cells) {
-      cell.classList.remove("highlighted");
-      cell.onclick = null;
-      removeTextFromCell(cell);
-    }
-    cellsByChar[char] = cells;
-  }
-
-  doAction();
-
-  recordAction({ redo: doAction, undo: undoAction });
-
-  closeActionGroup();
 }
 
 function solvePuzzle() {
@@ -161,6 +169,7 @@ function solvePuzzle() {
   }
 
   doAction();
+  solveAudio.play();
 
   recordAction({ redo: doAction, undo: undoAction });
 }

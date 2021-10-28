@@ -193,6 +193,9 @@ class Money {
     const _incrementBy = _incr => {
       const previousValue = this.value();
       const nextValue = previousValue + _incr;
+      if (nextValue < 0) {
+        throw Error("Not enough money!");
+      }
       const nextValueDigits = nextValue
         .toString()
         .split("")

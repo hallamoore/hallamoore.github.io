@@ -1,3 +1,8 @@
+const buzzerAudio = new Audio("./buzzer.mp3");
+const dingAudios = [new Audio("./ding.mp3")];
+const solveAudio = new Audio("./solve.mp3");
+const waitingAudio = new Audio("./waiting.mp3");
+
 window.onkeydown = ev => {
   if (document.querySelectorAll(".highlighted").length === 0) {
     if (ev.key === "Enter") {
@@ -21,6 +26,12 @@ window.onkeydown = ev => {
   }
   if (ev.key === "z" && ev.ctrlKey) {
     undo();
+  } else if (ev.key === " ") {
+    if (waitingAudio.paused) {
+      waitingAudio.play();
+    } else {
+      waitingAudio.pause();
+    }
   }
 };
 
