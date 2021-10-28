@@ -14,7 +14,6 @@ body {
 .container {
   border-collapse: collapse;
   margin: auto;
-  margin-bottom: 10vh;
 }
 
 .cell {
@@ -46,4 +45,25 @@ body {
 
 .highlighted {
   background-color: #3366ff;
+}
+
+#category {
+  width: 800px;
+  background-image: linear-gradient(
+    to right,
+    rgba(48, 0, 91, 0),
+    rgba(48, 0, 91, 0.9),
+    rgba(48, 0, 91, 1),
+    rgba(48, 0, 91, 0.9),
+    rgba(48, 0, 91, 0)
+  );
+  margin: auto;
+  text-align: center;
+  color: white;
+  font-size: 30px;
+  border-top: solid white 1px;
+  border-bottom: solid white 1px;
+  padding: 5px;
+  margin-top: 30px;
+  margin-bottom: 10vh;
 }

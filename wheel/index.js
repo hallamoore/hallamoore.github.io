@@ -1,19 +1,23 @@
-const testPuzzle = [
-  ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
-  ["_", "_", "_", "T", "H", "I", "S", "_", "I", "S", "_", "_", "_", "_"],
-  ["_", "_", "_", "_", "A", "_", "T", "E", "S", "T", "_", "_", "_", "_"],
-  ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"]
-];
+const testPuzzle = {
+  category: "phrase",
+  chars: [
+    ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    ["_", "_", "_", "T", "H", "I", "S", "_", "I", "S", "_", "_", "_", "_"],
+    ["_", "_", "_", "_", "A", "_", "T", "E", "S", "T", "_", "_", "_", "_"],
+    ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"]
+  ]
+};
 
 let cellsByChar = {};
 
 function initPuzzle(puzzle) {
+  document.querySelector("#category").innerText = puzzle.category.toUpperCase();
   cellsByChar = {};
   const rows = document.querySelectorAll("tr");
 
   for (let i = 0; i < rows.length; i++) {
-    if (puzzle.length <= i) break;
-    const puzzleRow = puzzle[i];
+    if (puzzle.chars.length <= i) break;
+    const puzzleRow = puzzle.chars[i];
     const cells = rows[i].querySelectorAll("td");
 
     for (let j = 0; j < cells.length; j++) {
