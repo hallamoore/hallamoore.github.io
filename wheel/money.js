@@ -12,6 +12,14 @@ function changePlayer(playerId) {
     .parentElement.classList.add("current-player");
 }
 
+function nextPlayer() {
+  let nextPlayerId = currentPlayer + 1;
+  if (nextPlayerId == 4) {
+    nextPlayerId = 1;
+  }
+  changePlayer(nextPlayerId);
+}
+
 function rewardMoney(numLettersRevealed) {
   moneyByPlayerId[currentPlayer].incrementBy(
     currentMoneyPerLetter * numLettersRevealed

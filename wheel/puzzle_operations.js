@@ -76,7 +76,10 @@ function createPuzzleLayout(input) {
 
 function guessLetter(char) {
   char = char.toUpperCase();
-  if (!cellsByChar[char]) return;
+  if (!cellsByChar[char]) {
+    nextPlayer();
+    return;
+  }
 
   if (["A", "E", "I", "O", "U"].includes(char)) {
     deductVowelCost();
