@@ -72,6 +72,7 @@ body {
 #player-container {
   margin-top: 40px;
   display: flex;
+  align-items: center;
   margin-bottom: 10vh;
 }
 
@@ -209,6 +210,26 @@ body {
   width: 290px;
   height: 10px;
   border-radius: 10px;
+}
+
+.current-player {
+  height: 200px;
+}
+
+.current-player::before {
+  content: "";
+  height: 30px;
+  width: 30px;
+  background-image: url("triangle.png");
+  background-size: cover;
+}
+.current-player::after {
+  content: "";
+  height: 30px;
+  width: 30px;
+  background-image: url("triangle.png");
+  background-size: cover;
+  transform: rotate(180deg);
 }
 
 .money {

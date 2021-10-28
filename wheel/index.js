@@ -10,13 +10,13 @@ window.onkeydown = ev => {
         }
         break;
       case ",":
-        currentPlayer = 1;
+        changePlayer(1);
         break;
       case ".":
-        currentPlayer = 2;
+        changePlayer(2);
         break;
       case "/":
-        currentPlayer = 3;
+        changePlayer(3);
         break;
       case "0":
       case "1":
@@ -35,6 +35,7 @@ window.onkeydown = ev => {
         break;
     }
   }
+  ev.preventDefault();
 };
 
 window.onload = () => {
@@ -43,4 +44,6 @@ window.onload = () => {
   for (i = 1; i <= 3; i++) {
     moneyByPlayerId[i] = new Money(i);
   }
+
+  changePlayer(1);
 };

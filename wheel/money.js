@@ -2,6 +2,16 @@ let currentPlayer = 1;
 let currentMoneyPerLetter = 0;
 const moneyByPlayerId = {};
 
+function changePlayer(playerId) {
+  currentPlayer = playerId;
+  for (let node of document.querySelectorAll(".current-player")) {
+    node.classList.remove("current-player");
+  }
+  document
+    .querySelector(`#player${playerId}`)
+    .parentElement.classList.add("current-player");
+}
+
 function rewardMoney(numLettersRevealed) {
   moneyByPlayerId[currentPlayer].incrementBy(
     currentMoneyPerLetter * numLettersRevealed
