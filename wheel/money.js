@@ -228,4 +228,8 @@ class Money {
       undo: () => _incrementBy(-incr)
     });
   }
+
+  resetToZero() {
+    this.incrementBy(-this.value());
+  }
 }

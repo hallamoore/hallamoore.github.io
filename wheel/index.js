@@ -1,32 +1,59 @@
 const buzzerAudio = new Audio("./buzzer.mp3");
-const dingAudios = [new Audio("./ding.mp3")];
+const dingAudios = [];
 const solveAudio = new Audio("./solve.mp3");
 const waitingAudio = new Audio("./waiting.mp3");
+const bankruptAudio = new Audio("./bankrupt.mp3");
+solveAudio.volume = 0.3;
+bankruptAudio.volume = 0.1;
+waitingAudio.volume = 0.4;
 
 window.onkeydown = ev => {
+  const key = ev.key.toLowerCase();
   if (document.querySelectorAll(".highlighted").length === 0) {
-    if (ev.key === "Enter") {
+    if (key === "enter") {
       solvePuzzle();
-    } else if (ev.key === "Tab" && Object.keys(cellsByChar).length === 0) {
+    } else if (key === "tab" && Object.keys(cellsByChar).length === 0) {
       nextPuzzle();
-    } else if (ev.key === ",") {
+    } else if (key === ",") {
       changePlayer(1);
-    } else if (ev.key === ".") {
+    } else if (key === ".") {
       changePlayer(2);
-    } else if (ev.key === "/") {
+    } else if (key === "/") {
       changePlayer(3);
       ev.preventDefault();
-    } else if (ev.key.match(/^\d$/)) {
-      changeMoneyPerLetter(parseInt(ev.key) * 100);
-    } else if (ev.key.match(/^[a-zA-Z]$/) && !ev.ctrlKey) {
-      guessLetter(ev.key);
-    } else if (ev.key === "y" && ev.ctrlKey) {
+    } else if (key.match(/^\d$/)) {
+      if (key === "0") {
+        changeMoneyPerLetter(1000);
+      } else {
+        changeMoneyPerLetter(parseInt(key) * 100);
+      }
+    } else if (key === " ") {
+      changeMoneyPerLetter(currentMoneyPerLetter + 50);
+    } else if (key.match(/^[a-zA-Z]$/) && !ev.ctrlKey) {
+      guessLetter(key);
+    } else if (key === "y" && ev.ctrlKey) {
       redo();
+    } else if (key === "r" && ev.ctrlKey) {
+      openActionGroup();
+      for (let money of Object.values(moneyByPlayerId)) {
+        money.resetToZero();
+      }
+      resetPuzzle();
+      closeActionGroup();
+      ev.preventDefault();
+      ev.stopPropagation();
+    } else if (key === "b" && ev.ctrlKey) {
+      openActionGroup();
+      moneyByPlayerId[currentPlayer].resetToZero();
+      nextPlayer();
+      closeActionGroup();
+      bankruptAudio.play();
+      ev.preventDefault();
     }
   }
-  if (ev.key === "z" && ev.ctrlKey) {
+  if (key === "z" && ev.ctrlKey) {
     undo();
-  } else if (ev.key === " ") {
+  } else if (key === "capslock") {
     if (waitingAudio.paused) {
       waitingAudio.play();
     } else {

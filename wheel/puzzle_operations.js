@@ -63,6 +63,60 @@ function nextPuzzle() {
   });
 }
 
+function buildCellsByChar(puzzleIndex) {
+  const puzzle = puzzles[currentPuzzleIndex];
+  const puzzleLayout = createPuzzleLayout(puzzle.data);
+
+  const _cellsByChar = {};
+  const rows = document.querySelectorAll("tr");
+  for (let i = 0; i < rows.length; i++) {
+    const puzzleRow = puzzleLayout[i];
+    const cells = rows[i].querySelectorAll("td");
+
+    for (let j = 0; j < cells.length; j++) {
+      const cell = cells[j];
+
+      const char = puzzleRow[j].toUpperCase();
+      if (char !== "_") {
+        if (!_cellsByChar[char]) {
+          _cellsByChar[char] = [];
+        }
+        _cellsByChar[char].push(cell);
+      }
+    }
+  }
+  return _cellsByChar;
+}
+
+function resetPuzzle() {
+  const previousCellsByChar = { ...cellsByChar };
+  const nextCellsByChar = buildCellsByChar(currentPuzzleIndex);
+
+  function doAction() {
+    for (let cells of Object.values(nextCellsByChar)) {
+      for (let cell of cells) {
+        removeTextFromCell(cell);
+      }
+    }
+    cellsByChar = nextCellsByChar;
+  }
+
+  function undoAction() {
+    for (let [char, cells] of Object.entries(nextCellsByChar)) {
+      if (!previousCellsByChar[char]) {
+        for (let cell of cells) {
+          cell.append(char);
+        }
+      }
+    }
+    cellsByChar = previousCellsByChar;
+  }
+
+  doAction();
+
+  recordAction({ redo: doAction, undo: undoAction });
+}
+
 function createPuzzleLayout(input) {
   let rows = justify(input, 12);
 
@@ -116,7 +170,9 @@ function guessLetter(char) {
       for (let i = 0; i < cells.length; i++) {
         const cell = cells[i];
         if (!dingAudios[i]) {
-          dingAudios.push(new Audio("./ding.mp3"));
+          const audio = new Audio("./ding.mp3");
+          audio.volume = 0.6;
+          dingAudios.push(audio);
         }
         dingAudios[i].play();
         cell.classList.add("highlighted");
