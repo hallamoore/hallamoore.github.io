@@ -67,5 +67,38 @@ body {
   border-bottom: solid white 1px;
   padding: 5px;
   margin-top: 30px;
+}
+
+#player-container {
+  width: 840px;
+  margin: auto;
+  margin-top: 40px;
   margin-bottom: 10vh;
+  display: flex;
+}
+
+.player {
+  flex-grow: 1;
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 280px;
+  height: 117px;
+  padding: 20px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+#player1 {
+  background-image: url("player1.png");
+}
+
+#player2 {
+  background-image: url("player2.png");
+}
+
+#player3 {
+  background-image: url("player3.png");
 }
