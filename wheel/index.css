@@ -7,13 +7,14 @@ body {
   background-image: url(boston.jpg);
   background-size: cover;
   background-repeat: no-repeat;
-  display: table-cell;
-  vertical-align: middle;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .container {
   border-collapse: collapse;
-  margin: auto;
 }
 
 .cell {
@@ -59,7 +60,6 @@ body {
     rgba(48, 0, 91, 0.9),
     rgba(48, 0, 91, 0)
   );
-  margin: auto;
   text-align: center;
   color: white;
   font-size: 30px;
@@ -70,11 +70,9 @@ body {
 }
 
 #player-container {
-  width: 840px;
-  margin: auto;
   margin-top: 40px;
-  margin-bottom: 10vh;
   display: flex;
+  margin-bottom: 10vh;
 }
 
 .player {
@@ -84,23 +82,133 @@ body {
   background-size: contain;
   background-repeat: no-repeat;
   width: 280px;
-  height: 117px;
-  padding: 20px;
   text-align: center;
   box-sizing: border-box;
-  text-shadow: 3px 3px 3px black, -1px -1px 1px black;
+  text-shadow: 3px 3px 3px black, -1px -1px 3px black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1;
+
+  --gradient-hue: 360;
+  --hue-mod-multiplier: 1;
+  --brightness-modifier: 0%;
+
+  --gradient-color-1: hsl(
+    var(--gradient-hue),
+    100%,
+    calc(18% + var(--brightness-modifier))
+  );
+  --gradient-color-2: hsl(
+    var(--gradient-hue),
+    75%,
+    calc(30% + var(--brightness-modifier))
+  );
+  --gradient-color-3: hsl(
+    calc(var(--gradient-hue) - (45 * var(--hue-mod-multiplier))),
+    82%,
+    calc(50% + var(--brightness-modifier))
+  );
+  --gradient-color-4: hsl(
+    calc(var(--gradient-hue) - (10 * var(--hue-mod-multiplier))),
+    100%,
+    calc(24% + var(--brightness-modifier))
+  );
+  --gradient-color-5: hsl(
+    calc(var(--gradient-hue) - (15 * var(--hue-mod-multiplier))),
+    100%,
+    calc(28% + var(--brightness-modifier))
+  );
+  --gradient-color-6: hsl(
+    calc(var(--gradient-hue) - (23 * var(--hue-mod-multiplier))),
+    100%,
+    calc(38% + var(--brightness-modifier))
+  );
+
+  background-image: linear-gradient(
+      rgba(255, 255, 255, 0.9),
+      rgba(255, 255, 255, 0.8),
+      rgba(255, 255, 255, 0.7),
+      rgba(255, 255, 255, 0.6),
+      rgba(255, 255, 255, 0.5),
+      rgba(255, 255, 255, 0.4),
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0)
+    ),
+    linear-gradient(
+      to right,
+      var(--gradient-color-1),
+      var(--gradient-color-2),
+      var(--gradient-color-3),
+      var(--gradient-color-4),
+      var(--gradient-color-4),
+      var(--gradient-color-5),
+      var(--gradient-color-5),
+      var(--gradient-color-1),
+      var(--gradient-color-5),
+      var(--gradient-color-1),
+      var(--gradient-color-1),
+      var(--gradient-color-1),
+      var(--gradient-color-1),
+      var(--gradient-color-1),
+      var(--gradient-color-1),
+      var(--gradient-color-1),
+      var(--gradient-color-1),
+      var(--gradient-color-4),
+      var(--gradient-color-1),
+      var(--gradient-color-6),
+      var(--gradient-color-4),
+      var(--gradient-color-4),
+      var(--gradient-color-4),
+      var(--gradient-color-4),
+      var(--gradient-color-1),
+      var(--gradient-color-1)
+    );
 }
 
 #player1 {
-  background-image: url("player1.png");
+  --gradient-hue: 360;
+  --hue-mod-multiplier: 0.5;
 }
 
 #player2 {
-  background-image: url("player2.png");
+  --gradient-hue: 55;
+  --brightness-modifier: 10%;
+  --hue-mod-multiplier: 0.25;
 }
 
 #player3 {
-  background-image: url("player3.png");
+  --gradient-hue: 240;
+}
+
+.banner {
+  width: 290px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 117px;
+  margin: 5px;
+}
+
+.banner-edge {
+  background-image: linear-gradient(white, #c6c6d9, #5c5c6a, #5c5c6a);
+  width: 290px;
+  height: 10px;
+  border-radius: 10px;
 }
 
 .money {
@@ -124,5 +232,5 @@ body {
   digits. Reduce the first shadow by a pixel so the width can be a bit smaller.
  */
   width: 25px;
-  text-shadow: 2px 2px 3px black, -1px -1px 1px black;
+  text-shadow: 2px 2px 3px black, -1px -1px 3px black;
 }
