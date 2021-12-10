@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript">
+      function executeScripts() {
+        // Adding scripts through the html node's innerHTML attribute doesn't actually execute the
+        // scripts. This function removes the old script nodes and inserts new script nodes with
+        // the same content, which does result in them being executed.
+        for (let script of document.querySelectorAll("script")) {
+          const newScript = document.createElement("script");
+          if (script.src) {
+            newScript.src = script.src;
+          }
+          newScript.innerHTML = script.innerHTML;
+          script.remove();
+          document.head.appendChild(newScript);
+        }
+      }
+
+      async function loadSubAppIfApplicable() {
+        const { origin, pathname } = window.location;
+        if (pathname.startsWith("/invoicing")) {
+          const url = `${origin}/invoicing/index.html?path=${
+            pathname.split("/invoicing/")[1]
+          }`;
+          const resp = await fetch(url);
+          const newHTML = await resp.text();
+          document.querySelector("html").innerHTML = newHTML;
+          executeScripts();
+        } else {
+          window.onload = () => {
+            document.body.innerHTML = "404 Not Found";
+          };
+        }
+      }
+
+      loadSubAppIfApplicable();
+    </script>
+  </head>
+  <body></body>
+</html>
