@@ -2,7 +2,7 @@
 <html>
   <head>
     <script type="text/javascript">
-      function executeScripts() {
+      async function executeScripts() {
         // Adding scripts through the html node's innerHTML attribute doesn't actually execute the
         // scripts. This function removes the old script nodes and inserts new script nodes with
         // the same content, which does result in them being executed.
@@ -12,8 +12,13 @@
             newScript.src = script.src;
           }
           newScript.innerHTML = script.innerHTML;
+          const newScriptLoaded = new Promise(res => {
+            newScript.onload = res;
+          });
           script.remove();
           document.head.appendChild(newScript);
+          // Make sure scripts are loaded in order, definitions may depend on it.
+          await newScriptLoaded;
         }
       }
 
@@ -26,7 +31,8 @@
           const resp = await fetch(url);
           const newHTML = await resp.text();
           document.querySelector("html").innerHTML = newHTML;
-          executeScripts();
+          await executeScripts();
+          window.onload();
         } else {
           window.onload = () => {
             document.body.innerHTML = "404 Not Found";
