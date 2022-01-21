@@ -42,3 +42,15 @@ class Div extends Element {
     super("div", ...args);
   }
 }
+
+class Button extends Element {
+  constructor(...args) {
+    super("button", ...args);
+  }
+}
+
+class Input extends Element {
+  constructor(...args) {
+    super("input", ...args);
+  }
+}

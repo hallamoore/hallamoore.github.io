@@ -6,12 +6,17 @@ const SpreadsheetPage = defineElement(
       this.innerHTML = `Loading spreadsheet ${spreadsheetId}...`;
     }
 
-    async lookupTitle() {
+    async lookupTitle(spreadsheetId) {
       try {
-        title = await new API(spreadsheetId).getSpreadsheetTitle();
+        const title = await new API(spreadsheetId).getSpreadsheetTitle();
         this.updateTitle(title);
-      } catch (e) {
-        window.history.replaceState({}, "", "/invoicing");
+      } catch (err) {
+        console.error(err);
+        window.history.pushState(
+          { error: "Unable to load project" },
+          "",
+          "/invoicing"
+        );
       }
     }
 
@@ -22,7 +27,7 @@ const SpreadsheetPage = defineElement(
     connectedCallback() {
       const spreadsheetId = this.getAttribute("spreadsheetid");
       this.build(spreadsheetId);
-      this.lookupTitle();
+      this.lookupTitle(spreadsheetId);
     }
   }
 );

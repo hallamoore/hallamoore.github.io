@@ -71,12 +71,12 @@ class Router {
   };
 
   attach() {
-    const origReplaceState = window.history.replaceState;
-    window.history.replaceState = (...args) => {
-      origReplaceState.call(window.history, ...args);
+    const origPushState = window.history.pushState;
+    window.history.pushState = (...args) => {
+      origPushState.call(window.history, ...args);
       this.renderCurrentRoute();
     };
-
+    window.onpopstate = this.renderCurrentRoute;
     window.onload = this.renderCurrentRoute;
   }
 }
