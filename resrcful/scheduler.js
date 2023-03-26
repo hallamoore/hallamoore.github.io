@@ -35,11 +35,15 @@ export function schedule({ targets, employees, startDate = new Date() }) {
     const availableEmployees = employees.filter(
       (employee) => employeeHoursForDate(employee, date) > 0
     );
+    const finishingToday = [];
 
     for (let target of prioritizedUnfinishedTargets) {
-      const blocked = target.blockedBy?.some(
-        (blockingTargetName) => personHoursRemaining[blockingTargetName] > 0
-      );
+      const blocked = target.blockedBy?.some((blockingTargetName) => {
+        return (
+          personHoursRemaining[blockingTargetName] > 0 ||
+          finishingToday.includes(blockingTargetName)
+        );
+      });
       if (blocked) continue;
       scheduleByTarget[target.name][getDateString(date)] = [];
 
@@ -59,6 +63,7 @@ export function schedule({ targets, employees, startDate = new Date() }) {
         personHoursRemaining[target.name] -= employeeHoursForDate(employee, date);
 
         if (personHoursRemaining[target.name] <= 0) {
+          finishingToday.push(target.name);
           break;
         }
       }
