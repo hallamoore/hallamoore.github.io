@@ -11,8 +11,11 @@
           if (script.src) {
             newScript.src = script.src;
           }
+          if (script.type) {
+            newScript.type = script.type;
+          }
           newScript.innerHTML = script.innerHTML;
-          const newScriptLoaded = new Promise(res => {
+          const newScriptLoaded = new Promise((res) => {
             newScript.onload = res;
           });
           script.remove();
@@ -24,20 +27,20 @@
 
       async function loadSubAppIfApplicable() {
         const { origin, pathname } = window.location;
-        if (pathname.startsWith("/invoicing")) {
-          const url = `${origin}/invoicing/index.html?path=${
-            pathname.split("/invoicing/")[1]
-          }`;
-          const resp = await fetch(url);
-          const newHTML = await resp.text();
-          document.querySelector("html").innerHTML = newHTML;
-          await executeScripts();
-          window.onload();
-        } else {
-          window.onload = () => {
-            document.body.innerHTML = "404 Not Found";
-          };
+        for (let prefix of ["/invoicing", "/resrcful"]) {
+          if (pathname.startsWith(prefix)) {
+            const url = `${origin}${prefix}/index.html?path=${pathname.split(`${prefix}/`)[1]}`;
+            const resp = await fetch(url);
+            const newHTML = await resp.text();
+            document.querySelector("html").innerHTML = newHTML;
+            await executeScripts();
+            window.onload?.();
+            return;
+          }
         }
+        window.onload = () => {
+          document.body.innerHTML = "404 Not Found";
+        };
       }
 
       loadSubAppIfApplicable();

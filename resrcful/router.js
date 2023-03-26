@@ -1,5 +1,6 @@
 import NotFoundPage from "./pages/not_found.js";
 import IndexPage from "./pages/index.js";
+import LoginPage from "./pages/login.js";
 
 const routes = {};
 
@@ -16,7 +17,7 @@ export class Redirect {
 function loadRoute(path) {
   const page = routes[path]?.build() || NotFoundPage.build();
   if (page instanceof Redirect) {
-    history.pushState("", "", location.origin + page.path);
+    history.pushState("", "", location.origin + "/resrcful" + page.path);
     return loadRoute(page.path);
   }
   document.body.textContent = "";
@@ -25,5 +26,7 @@ function loadRoute(path) {
 
 addRoute("/404", NotFoundPage);
 addRoute("/", IndexPage);
+addRoute("/login", LoginPage);
 
+console.log("router", location.pathname);
 loadRoute(location.pathname.split("/resrcful").at(-1));

@@ -1,3 +1,4 @@
+import { getCookie } from "../cookies.js";
 import { Redirect } from "../router.js";
 import Timeline from "../components/timeline.js";
 import { schedule } from "../scheduler.js";
@@ -403,6 +404,9 @@ class IndexWrapper {
 
 export default {
   build() {
+    if (!getCookie("resrcfulSession")) {
+      return new Redirect("/login");
+    }
     return new IndexWrapper().element;
   },
 };
