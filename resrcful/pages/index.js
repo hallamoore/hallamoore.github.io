@@ -1,4 +1,3 @@
-import { getCookie } from "../cookies.js";
 import { Redirect } from "../router.js";
 import Timeline from "../components/timeline.js";
 import { schedule } from "../scheduler.js";
@@ -404,10 +403,6 @@ class IndexWrapper {
 
 export default {
   build() {
-    if (!getCookie("gSpreadsheetId")) {
-      return new Redirect("/load");
-    }
-
     return new IndexWrapper().element;
   },
 };

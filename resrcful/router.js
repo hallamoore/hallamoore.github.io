@@ -1,6 +1,5 @@
 import NotFoundPage from "./pages/not_found.js";
 import IndexPage from "./pages/index.js";
-import LoadPage from "./pages/load.js";
 
 const routes = {};
 
@@ -26,6 +25,5 @@ function loadRoute(path) {
 
 addRoute("/404", NotFoundPage);
 addRoute("/", IndexPage);
-addRoute("/load", LoadPage);
 
 loadRoute(location.pathname.split("/resrcful").at(-1));
