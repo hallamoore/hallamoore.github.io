@@ -20,23 +20,28 @@ function elem(tag, args = {}) {
 const remote = {
   async get() {
     const params = new URLSearchParams();
-    params.set("path", "/state");
-    params.set("method", "get");
     const resp = await fetch(
-      "https://script.google.com/macros/s/AKfycbywvSqlKXZ0tDITxpsKNNk-z5N7FQ449gq0Evq40W-Jto9tk4gCwWE8Fjat0t5Lk2xg2w/exec?" +
-        params.toString()
+      "https://script.google.com/macros/s/AKfycbzbR2Yzje3mVygJnsMm0Mr8D2bSnYXGOwZFZnjhFfg8HcjMj8yBpFZq-S_giOTtg57M/exec",
+      {
+        method: "POST",
+        body: JSON.stringify({ session: getCookie("resrcfulSession"), action: "loadData" }),
+      }
     );
     return await resp.json();
   },
 
   async set(data) {
     const params = new URLSearchParams();
-    params.set("path", "/state");
-    params.set("method", "post");
-    params.set("body", JSON.stringify(data));
     await fetch(
-      "https://script.google.com/macros/s/AKfycbywvSqlKXZ0tDITxpsKNNk-z5N7FQ449gq0Evq40W-Jto9tk4gCwWE8Fjat0t5Lk2xg2w/exec?" +
-        params.toString()
+      "https://script.google.com/macros/s/AKfycbzbR2Yzje3mVygJnsMm0Mr8D2bSnYXGOwZFZnjhFfg8HcjMj8yBpFZq-S_giOTtg57M/exec",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          session: getCookie("resrcfulSession"),
+          action: "saveData",
+          actionArgs: [JSON.stringify(data)],
+        }),
+      }
     );
   },
 };

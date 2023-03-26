@@ -13,7 +13,7 @@ export default {
     submit.textContent = "Login";
     submit.onclick = async () => {
       const resp = await fetch(
-        "https://script.google.com/macros/s/AKfycbz1P680nD6Q-iEYg-4z59vdEXJZuhN6MtY1OHt5gQLnXEpksOoV78O5TD3mM-2cEaob/exec",
+        "https://script.google.com/macros/s/AKfycbzbR2Yzje3mVygJnsMm0Mr8D2bSnYXGOwZFZnjhFfg8HcjMj8yBpFZq-S_giOTtg57M/exec",
         {
           method: "POST",
           body: JSON.stringify({
