@@ -67,13 +67,7 @@ class IDKState {
   async load() {
     if (this.data) return this.data;
 
-    this.data = local.get();
-    if (!this.data) {
-      this.data = await remote.get();
-      if (this.data) {
-        local.set(this.data);
-      }
-    }
+    this.data = await remote.get();
     if (!this.data) {
       this.data = {};
     }
