@@ -187,7 +187,7 @@ class Grid {
     this.element = elem("div", {
       style: {
         display: "grid",
-        gridTemplateColumns: `auto repeat(${headers.length - 1}, 1fr)`,
+        gridTemplateColumns: `repeat(${headers.length}, 1fr)`,
       },
     });
 
