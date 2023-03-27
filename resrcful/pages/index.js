@@ -56,6 +56,8 @@ const local = {
   },
 };
 
+const DEBUG = false;
+
 class IDKState {
   constructor() {
     this.listeners = {
@@ -67,7 +69,7 @@ class IDKState {
   async load() {
     if (this.data) return this.data;
 
-    this.data = await remote.get();
+    this.data = await (DEBUG ? local : remote).get();
     if (!this.data) {
       this.data = {};
     }
@@ -179,25 +181,19 @@ function statefulArrayInput({ stateKey }) {
   });
 }
 
-class Grid {
-  constructor({ headers, stateKey, Item }) {
+class InnerGrid {
+  constructor({ stateKey, Item, marginLeft }) {
     this.stateKey = stateKey;
     this.Item = Item;
-
-    this.element = elem("div", {
-      style: {
-        display: "grid",
-        gridTemplateColumns: `repeat(${headers.length}, 1fr)`,
-      },
-    });
-
-    headers.forEach((header) => this.element.appendChild(elem("div", { textContent: header })));
+    this.marginLeft = marginLeft;
 
     this.loading = elem("div", { textContent: "loading" });
-    this.element.appendChild(this.loading);
 
     this.items = {};
     state.subscribe("insert", `${stateKey}.*`, this.addItem);
+    // TODO: subtargets aren't visually removed when their parents are deleted.  Refreshing shows
+    // that the subtargets are gone, but the UI should respond with the deletions immediately.
+    // Probably need to add some other subscriptions somewhere.
     state.subscribe("delete", `${stateKey}.*`, this.removeItem);
     this.loadItems();
   }
@@ -206,23 +202,76 @@ class Grid {
     await state.load();
     this.loading.remove();
     this.loading = null;
-    const items = state.getValue(this.stateKey);
+    const items = state.getValue(this.stateKey) || [];
     Object.values(items).forEach((item) => this.addItem(item));
   }
 
   addItem = (item) => {
-    this.items[item.id] = new this.Item(item);
-    this.items[item.id].appendTo(this.element);
+    this.items[item.id] = new this.Item(item, {
+      stateKey: this.stateKey,
+      marginLeft: this.marginLeft,
+    });
+    if (this.stateKey === "targets.1.subtargets") {
+      console.log(item.id, this.parent, this.anchor.textContent);
+    }
+    if (this.parent) {
+      this.items[item.id].appendTo(this.parent);
+    }
+    if (this.anchor) {
+      this.items[item.id].insertAfter(this.anchor);
+    }
   };
 
   removeItem = (itemId) => {
     this.items[itemId].remove();
     delete this.items[itemId];
   };
+
+  appendTo(node) {
+    this.parent = node;
+    if (this.loading) {
+      node.appendChild(this.loading);
+    } else {
+      Object.values(this.items).appendTo(node);
+    }
+  }
+
+  insertAfter(anchor) {
+    this.anchor = anchor;
+    if (this.loading) {
+      // Don't set the this.anchor to the loading element. The loading element gets removed
+      // before the items are added to the DOM, so there would be nowhere to anchor to.
+      return this.anchor.after(this.loading);
+    }
+
+    for (let item of Object.values(this.items)) {
+      item.insertAfter(this.anchor);
+      this.anchor = item;
+    }
+  }
+
+  remove() {
+    Object.values(this.items).forEach((item) => item.remove());
+  }
+}
+
+class Grid {
+  constructor({ headers, stateKey, Item }) {
+    this.element = elem("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: `auto repeat(${headers.length - 1}, 1fr)`,
+      },
+    });
+
+    headers.forEach((header) => this.element.appendChild(elem("div", { textContent: header })));
+
+    new InnerGrid({ stateKey, Item }).appendTo(this.element);
+  }
 }
 
 class Item {
-  constructor(item, { stateKey, statePrefix = `${stateKey}.${item.id}`, fields } = {}) {
+  constructor(item, { stateKey, statePrefix = `${stateKey}.${item.id}`, fields, marginLeft } = {}) {
     const basicField = (key) => statefulInput({ stateKey: `${statePrefix}.${key}` });
     const arrayField = (key) => statefulArrayInput({ stateKey: `${statePrefix}.${key}` });
 
@@ -239,10 +288,21 @@ class Item {
       throw new Error(`Unsupported field type: ${type}`);
     });
     this.fields.push(deleteBtn);
+
+    this.fields[0].style.marginLeft = marginLeft;
+    console.log(this.fields[0], marginLeft);
   }
 
   appendTo(node) {
     this.fields.forEach((field) => node.appendChild(field));
+  }
+
+  insertAfter(node) {
+    let previousNode = node;
+    this.fields.forEach((field) => {
+      previousNode.after(field);
+      previousNode = field;
+    });
   }
 
   remove() {
@@ -266,7 +326,7 @@ class NewItem {
   }
 
   createItem = () => {
-    const id = Math.max(0, ...Object.keys(state.getValue(this.stateKey))) + 1;
+    const id = Math.max(0, ...Object.keys(state.getValue(this.stateKey) || {})) + 1;
     state.insertValue(`${this.stateKey}.${id}`, {
       id,
       name: `New ${this.displayName}`,
@@ -279,6 +339,7 @@ class TargetList extends Grid {
   constructor() {
     super({
       headers: [
+        "",
         "Name",
         "Priority",
         "Can Be Done By",
@@ -292,10 +353,14 @@ class TargetList extends Grid {
   }
 }
 
+function addPx(pxStr = "0px", increment) {
+  return `${parseInt(pxStr.split("px")[0]) + increment}px`;
+}
+
 class Target extends Item {
-  constructor(target) {
+  constructor(target, { stateKey, marginLeft, ...opts }) {
     super(target, {
-      stateKey: "targets",
+      stateKey,
       fields: [
         { key: "name", type: "basic" },
         { key: "priority", type: "basic" },
@@ -303,13 +368,67 @@ class Target extends Item {
         { key: "personHoursRemaining", type: "basic" },
         { key: "blockedBy", type: "array" },
       ],
+      ...opts,
     });
+    let subTargetsExpanded = false;
+    let newSubtarget;
+    let subTargetInnerGrid;
+    this.fields.splice(
+      0,
+      0,
+      elem("button", {
+        textContent: ">",
+        style: { marginLeft },
+        onclick: (ev) => {
+          subTargetsExpanded = !subTargetsExpanded;
+
+          if (subTargetsExpanded) {
+            ev.target.textContent = "v";
+
+            const subStateKey = `${stateKey}.${target.id}.subtargets`;
+            if (!state.getValue(subStateKey)) {
+              state.insertValue(subStateKey, {});
+            }
+
+            // TODO: Visual bug
+            // 1. Expand first (out of two) targets (Target A)
+            // 2. Create new subtarget -- Target A1
+            // 3. Expand Target A1
+            // 4. Create new subtarget for A1 -- Target A1i
+            // 5. Back up to A (but leave everything expanded), create new subtarget -- Target A2
+            // Target A2 is added above Target A1???
+            // Also collapsing everything and then trying to expand A1 again throws an error
+            // And not collapsing everything in order also seems to not collapse lower levels
+            if (!newSubtarget) {
+              newSubtarget = new NewTarget({ stateKey: subStateKey, displayName: "Sub-Target" })
+                .element;
+              newSubtarget.style.gridColumnEnd = `span ${this.fields.length}`;
+              newSubtarget.style.marginLeft = addPx(marginLeft, 30);
+            }
+            this.fields.at(-1).after(newSubtarget);
+
+            if (!subTargetInnerGrid) {
+              subTargetInnerGrid = new InnerGrid({
+                stateKey: subStateKey,
+                Item: Target,
+                marginLeft: addPx(marginLeft, 30),
+              });
+            }
+            subTargetInnerGrid.insertAfter(this.fields.at(-1));
+          } else {
+            ev.target.textContent = ">";
+            newSubtarget.remove();
+            subTargetInnerGrid.remove();
+          }
+        },
+      })
+    );
   }
 }
 
 class NewTarget extends NewItem {
-  constructor() {
-    super({ stateKey: "targets", displayName: "Target" });
+  constructor({ stateKey = "targets", displayName = "Target" } = {}) {
+    super({ stateKey, displayName });
   }
 }
 
@@ -332,14 +451,14 @@ class EmployeeList extends Grid {
 }
 
 class Employee extends Item {
-  constructor(employee) {
+  constructor(employee, opts) {
     super(employee, {
-      stateKey: "employees",
       fields: [
         { key: "name", type: "basic" },
         { key: "hoursPerDay", type: "basic" },
         { key: "hoursExceptions", type: "basic" },
       ],
+      ...opts,
     });
   }
 }
