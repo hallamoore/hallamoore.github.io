@@ -177,7 +177,7 @@ function statefulArrayInput({ stateKey }) {
   return statefulInput({
     stateKey,
     loadTransform: (x) => x?.join(", ") || "",
-    saveTransform: (x) => x.split(",").map((s) => s.trim()),
+    saveTransform: (x) => (x.trim() === "" ? [] : x.split(",").map((s) => s.trim())),
   });
 }
 
@@ -211,9 +211,6 @@ class InnerGrid {
       stateKey: this.stateKey,
       marginLeft: this.marginLeft,
     });
-    if (this.stateKey === "targets.1.subtargets") {
-      console.log(item.id, this.parent, this.anchor.textContent);
-    }
     if (this.parent) {
       this.items[item.id].appendTo(this.parent);
     }
@@ -290,7 +287,6 @@ class Item {
     this.fields.push(deleteBtn);
 
     this.fields[0].style.marginLeft = marginLeft;
-    console.log(this.fields[0], marginLeft);
   }
 
   appendTo(node) {
@@ -485,7 +481,7 @@ class TimelineWrapper {
   constructor() {
     this.element = elem("div");
     this.loading = elem("div", { textContent: "loading" });
-    const calculate = elem("button", { textContent: "Calculate" });
+    const calculate = elem("button", { textContent: "Calculate", id: "calculate" });
     calculate.onclick = () => {
       if (this.timeline) this.timeline.remove();
       this.element.appendChild(this.loading);
