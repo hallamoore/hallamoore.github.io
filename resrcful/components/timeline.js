@@ -1,31 +1,9 @@
-const example = {
-  "Target A": {
-    "2023-03-25": [],
-    "2023-03-26": [],
-    "2023-03-27": [],
-    "2023-03-28": [],
-    "2023-03-29": [],
-    "2023-03-30": [],
-    "2023-03-31": [],
-    "2023-04-01": [],
-    "2023-04-02": [],
-    "2023-04-03": ["Employee A"],
-    "2023-04-04": ["Employee A"],
-    "2023-04-05": ["Employee A"],
-    "2023-04-06": ["Employee A"],
-    "2023-04-07": ["Employee A"],
-  },
-  "Target B": {
-    "2023-03-25": [],
-    "2023-03-26": [],
-    "2023-03-27": ["Employee A"],
-    "2023-03-28": ["Employee A"],
-    "2023-03-29": ["Employee A"],
-    "2023-03-30": ["Employee A"],
-    "2023-03-31": ["Employee A"],
-  },
-};
+import { TimeDelta } from "../time/timedelta.js";
+import { DateTime } from "../time/datetime.js";
+import { TimeRange } from "../time/timerange.js";
+import { TimeRangeCollection } from "../time/timerange_collection.js";
 
+// TODO: move utils to util file instead of duplicating
 function elem(tag, args = {}) {
   const node = document.createElement(tag);
   Object.entries(args).forEach(([key, value]) => {
@@ -40,74 +18,31 @@ function elem(tag, args = {}) {
   return node;
 }
 
-function getDateString(date) {
-  return date.toISOString().split("T")[0];
+function getTargetTimeRange(assignedTimeRanges) {
+  assignedTimeRanges.sort((a, b) => (a.start > b.start ? 1 : -1));
+  return new TimeRange(assignedTimeRanges[0].start, assignedTimeRanges.at(-1).end);
 }
 
-function copyDate(date) {
-  return new Date(date.getTime());
+function cmp(a, b) {
+  return a > b ? 1 : b > a ? -1 : 0;
 }
 
-function insertAfter(anchor, nodesToinsert) {
-  let previousNode = anchor;
-  for (let node of nodesToinsert) {
-    previousNode.after(node);
-    previousNode = node;
-  }
-}
-
-function increment(date, num) {
-  date = copyDate(date);
-  date.setDate(date.getDate() + num);
-  return date;
-}
-
-function getDateRange(targetSchedule) {
-  if (!Object.keys(targetSchedule)[0]?.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)) {
-    const startDates = [];
-    const endDates = [];
-    Object.values(targetSchedule).forEach((subtargetSchedule) => {
-      const [start, end] = getDateRange(subtargetSchedule);
-      startDates.push(start);
-      endDates.push(end);
-    });
-    return [new Date(Math.min(...startDates)), new Date(Math.max(...endDates))];
-  }
-  const dateStrs = Object.keys(targetSchedule);
-  dateStrs.sort();
-
-  const end = dateStrToDate(dateStrs.at(-1));
-  end.setHours(24);
-  return [dateStrToDate(dateStrs[0]), end];
-}
-
-// TODO: move utils to util file instead of duplicating
-function dateStrToDate(dateStr) {
-  // gets midnight of date in local timezone, rather than midnight utc like Date.parse does.
-  const [year, month, day] = dateStr.split("-");
-  const d = new Date();
-  d.setFullYear(year);
-  d.setMonth(month - 1);
-  d.setDate(day);
-  d.setHours(0);
-  d.setMinutes(0);
-  d.setSeconds(0);
-  d.setMilliseconds(0);
-  return d;
+function cmpKey(key) {
+  return (a, b) => cmp(a[key], b[key]);
 }
 
 class TargetRow {
-  constructor({ targetName, targetSchedule, startDate, duration }) {
-    this.targetSchedule = targetSchedule;
-
+  constructor({ target, startDate, duration }) {
     this.element = elem("tr");
     this.subtargetControls = elem("td");
     this.header = elem("td");
-    this.header.textContent = targetName;
+    this.header.textContent = target.name;
+    this.startDate = startDate;
+    this.duration = duration;
+    this.target = target;
 
     this.subtargetRows = [];
-    // If the keys aren't like YYYY-MM-DD, then they're subtarget names.
-    if (!Object.keys(targetSchedule)[0]?.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)) {
+    if (target.hasSubtargets) {
       let subTargetsExpanded = false;
       const expandButton = elem("button", {
         textContent: ">",
@@ -117,11 +52,12 @@ class TargetRow {
           if (subTargetsExpanded) {
             ev.target.textContent = "v";
 
+            const subtargets = Object.values(this.target.subtargets);
+            subtargets.sort(cmpKey("priority"));
             let anchor = this.element;
-            for (let [subtargetName, subtargetSchedule] of Object.entries(targetSchedule)) {
+            for (let subtarget of subtargets) {
               const subtargetRow = new TargetRow({
-                targetName: subtargetName,
-                targetSchedule: subtargetSchedule,
+                target: subtarget,
                 startDate,
                 duration,
               });
@@ -139,41 +75,34 @@ class TargetRow {
       this.subtargetControls.append(expandButton);
     }
 
-    this._updateDateBlocks({ startDate, duration });
+    this.updateDates({ startDate, duration });
   }
 
-  _updateDateBlocks({ startDate, duration }) {
+  updateDates({ startDate, duration }) {
+    // TODO: fix bug
+    // 1. Start in date view where subtarget has assigned blocks
+    // 2. Collapse subtarget row
+    // 3. Move to date view where subtart doesn't have assigned blocks
+    // 4. Expand subtarget row, it still shows the assigned blocks from the previous date view
+    Object.values(this.subtargetRows).forEach((subtargetRow) =>
+      subtargetRow.updateDates({ startDate, duration })
+    );
+
+    this.startDate = startDate;
+    this.duration = duration;
     this.element.innerHTML = "";
     this.element.appendChild(this.subtargetControls);
     this.element.appendChild(this.header);
 
-    const endDate = increment(startDate, duration);
-    let date = startDate;
-    let emptyBlockColSpan = 0;
+    const boundingTimeRange = new TimeRange(startDate, startDate.copy().increment(duration));
 
-    // If the keys aren't like YYYY-MM-DD, then they're subtarget names.
-    if (!Object.keys(this.targetSchedule)[0]?.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)) {
-      const [subStart, subEnd] = getDateRange(this.targetSchedule);
-      let colSpan = 0;
-      // TODO: these assume column duration is always one day
-      if (subStart < startDate) {
-        if (subEnd > startDate) {
-          if (subEnd < endDate) {
-            colSpan = (subEnd - startDate) / 1000 / 60 / 60 / 24;
-          } else {
-            colSpan = (endDate - startDate) / 1000 / 60 / 60 / 24;
-          }
-        }
-      } else {
-        if (subStart < endDate) {
-          emptyBlockColSpan = (subStart - startDate) / 1000 / 60 / 60 / 24;
-          if (subEnd < endDate) {
-            colSpan = (subEnd - subStart) / 1000 / 60 / 60 / 24;
-          } else {
-            colSpan = (endDate - subStart) / 1000 / 60 / 60 / 24;
-          }
-        }
-      }
+    const assignedRanges = this.target.mergedScheduledTimeRanges(boundingTimeRange);
+    if (assignedRanges.length === 0) return;
+
+    if (this.target.hasSubtargets) {
+      const targetTimeRange = getTargetTimeRange(assignedRanges);
+      const colSpan = Math.ceil(targetTimeRange.duration().days);
+      const emptyBlockColSpan = Math.floor(targetTimeRange.start.subtract(startDate).days);
 
       if (emptyBlockColSpan > 0) {
         const emptyBlock = elem("td");
@@ -185,44 +114,41 @@ class TargetRow {
         block.colSpan = colSpan;
         this.element.appendChild(block);
       }
-
-      this.subtargetRows.forEach((subtargetRow) =>
-        subtargetRow._updateDateBlocks({ startDate, duration })
-      );
       return;
     }
 
-    while (date <= endDate) {
-      if (this.targetSchedule[getDateString(date)]?.length > 0) {
-        if (emptyBlockColSpan > 0) {
-          const emptyBlock = elem("td");
-          emptyBlock.colSpan = emptyBlockColSpan;
-          this.element.appendChild(emptyBlock);
-          emptyBlockColSpan = 0;
-        }
-        const block = elem("td");
-        block.style.backgroundColor = "blue";
-        let colspan = 0;
-        while (this.targetSchedule[getDateString(date)]?.length > 0) {
-          date = increment(date, 1);
-          colspan++;
-        }
-        block.colSpan = colspan;
-        this.element.appendChild(block);
+    const unassignedTimeRanges = new TimeRangeCollection(boundingTimeRange).subtract(
+      assignedRanges
+    );
+    unassignedTimeRanges.forEach((timeRange) => (timeRange.unassigned = true));
+
+    const assignedAndUnassigned = unassignedTimeRanges.concat(assignedRanges);
+    // TODO: add sort function on TimeRangeCollection, consider adding check there to make sure
+    // ranges don't overlap
+    assignedAndUnassigned.sort((a, b) => (a.start > b.start ? 1 : -1));
+
+    for (let timeRange of assignedAndUnassigned) {
+      const block = elem("td");
+      let colSpan = 0;
+      if (timeRange.unassigned) {
+        // Display partially assigned days as fully assigned. This means empty blocks get truncated.
+        colSpan = Math.floor(timeRange.end.subtract(timeRange.start).days);
       } else {
-        emptyBlockColSpan += 1;
-        date = increment(date, 1);
+        block.style.backgroundColor = "blue";
+        // Display partially assigned days as fully assigned. This means assigned blocks get expanded.
+        colSpan = Math.ceil(timeRange.end.subtract(timeRange.start).days);
+      }
+      // need colSpan as it's own var bc if we directly assign 0 to block.colSpan, it turns into 1
+      if (colSpan != 0) {
+        block.colSpan = colSpan;
+        this.element.appendChild(block);
       }
     }
-  }
-
-  updateDates({ startDate, duration }) {
-    this._updateDateBlocks({ startDate, duration });
   }
 }
 
 class Timeline {
-  constructor({ scheduleByTarget, startDate, duration, headerInterval }) {
+  constructor({ targets, startDate, duration, headerInterval }) {
     this.startDate = startDate;
     this.duration = duration;
     this.headerInterval = headerInterval;
@@ -233,11 +159,10 @@ class Timeline {
     this._updateDateHeaders({ startDate, duration, headerInterval });
 
     this.targetRows = [];
-
-    for (let [targetName, targetSchedule] of Object.entries(scheduleByTarget)) {
+    targets.sort(cmpKey("priority"));
+    for (let target of targets) {
       const targetRow = new TargetRow({
-        targetName,
-        targetSchedule,
+        target: target,
         startDate,
         duration,
       });
@@ -249,12 +174,12 @@ class Timeline {
     const forward = document.createElement("button");
     forward.textContent = ">";
     forward.onclick = () => {
-      this.updateDates({ startDate: increment(this.startDate, this.duration) });
+      this.updateDates({ startDate: this.startDate.copy().increment(this.duration) });
     };
     const backward = document.createElement("button");
     backward.textContent = "<";
     backward.onclick = () => {
-      this.updateDates({ startDate: increment(this.startDate, -this.duration) });
+      this.updateDates({ startDate: this.startDate.copy().decrement(this.duration) });
     };
     const today = document.createElement("button");
     today.textContent = "Today";
@@ -275,8 +200,8 @@ class Timeline {
     this.headers.appendChild(elem("th")); // Corner header
     this.headers.appendChild(elem("th"));
 
-    const endDate = increment(this.startDate, this.duration);
-    let date = this.startDate;
+    const endDate = this.startDate.copy().increment(this.duration);
+    let date = this.startDate.copy();
     while (date < endDate) {
       const header = elem("th");
       // If duration isn't evenly divisible by headerInterval, the last header will need to span
@@ -287,9 +212,9 @@ class Timeline {
       // Can't really align center when headerInterval is more than 1.
       // The date represents the first column, not the middle one.
       // header.style.textAlign = "center";
-      header.textContent = `${date.getMonth() + 1}/${date.getDate()}`;
+      header.textContent = `${date.getMonth()}/${date.getDayOfMonth()}`;
       this.headers.appendChild(header);
-      date = increment(date, this.headerInterval);
+      date.increment({ days: this.headerInterval });
     }
   }
 
@@ -311,21 +236,16 @@ class Timeline {
 
 function getStartDate() {
   // if this is changed, make sure to change how the start date in schedule() is constructed too
-  const startDate = new Date();
-  startDate.setHours(0);
-  startDate.setMinutes(0);
-  startDate.setSeconds(0);
-  startDate.setMilliseconds(0);
-  return startDate;
+  return new DateTime().toStartOfDay();
 }
 
 export default {
-  build(scheduleByTarget) {
+  build({ targets }) {
     const startDate = getStartDate();
     const timeline = new Timeline({
-      scheduleByTarget,
+      targets,
       startDate,
-      duration: 14,
+      duration: new TimeDelta({ days: 14 }),
       headerInterval: 1,
     });
     window.test = timeline.updateDates;

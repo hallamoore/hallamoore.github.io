@@ -1,3 +1,4 @@
+"use strict";
 import { getCookie } from "../cookies.js";
 import { Redirect } from "../router.js";
 import Timeline from "../components/timeline.js";
@@ -492,11 +493,12 @@ class TimelineWrapper {
           hoursExceptions: JSON.parse(employee.hoursExceptions),
         };
       });
-      const results = schedule({ targets: Object.values(state.data.targets), employees });
+      const results = schedule({ targets: state.data.targets, employees });
       console.log(results);
       this.loading.remove();
-      this.timeline = Timeline.build(results[0]);
+      this.timeline = Timeline.build(results);
       this.element.appendChild(this.timeline);
+      // console.assert(document.body.innerHTML === expected, "BROKE THE THING");
     };
     this.element.appendChild(calculate);
   }
@@ -524,3 +526,5 @@ export default {
     return new IndexWrapper().element;
   },
 };
+
+const expected = `<div><h2>Targets</h2><div><div style="display: grid; grid-template-columns: auto repeat(6, 1fr);"><div></div><div>Name</div><div>Priority</div><div>Can Be Done By</div><div>Person Hours Remaining</div><div>Blocked By</div><div>Delete</div><button>&gt;</button><input><input><input><input><input><button>delete</button><button>&gt;</button><input><input><input><input><input><button>delete</button><button>&gt;</button><input><input><input><input><input><button>delete</button></div><div><button>Create New Target</button></div></div><h2>Employees</h2><div><div style="display: grid; grid-template-columns: auto repeat(3, 1fr);"><div>Name</div><div>Usual Hours Per Day</div><div>Hours Exceptions</div><div>Delete</div><input><input><input><button>delete</button></div><div><button>Create New Employee</button></div></div><h2>Schedule</h2><div><button id="calculate">Calculate</button><table style="width: 100%;"><tr><th></th><th></th><th colspan="1">4/1</th><th colspan="1">4/2</th><th colspan="1">4/3</th><th colspan="1">4/4</th><th colspan="1">4/5</th><th colspan="1">4/6</th><th colspan="1">4/7</th><th colspan="1">4/8</th><th colspan="1">4/9</th><th colspan="1">4/10</th><th colspan="1">4/11</th><th colspan="1">4/12</th><th colspan="1">4/13</th><th colspan="1">4/14</th></tr><tr><td><button>&gt;</button></td><td>Target A</td><td colspan="2"></td><td colspan="2"><hr></td></tr><tr><td></td><td>Target B</td><td colspan="4"></td><td style="background-color: blue;" colspan="1"></td><td style="background-color: blue;" colspan="1"></td><td style="background-color: blue;" colspan="1"></td></tr><tr><td><button>&gt;</button></td><td>Target C</td><td colspan="9"></td><td colspan="5"><hr></td></tr><div><button>Today</button><button>&lt;</button><button>&gt;</button></div></table></div></div>`;
