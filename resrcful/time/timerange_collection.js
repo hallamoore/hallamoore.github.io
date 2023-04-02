@@ -50,10 +50,10 @@ export class TimeRangeCollection extends Array {
     return results;
   }
 
-  intersection(otherTimeRange) {
+  intersection(otherTimeRange, { keepValues = [] } = {}) {
     const results = new TimeRangeCollection();
     for (let thisTimeRange of this) {
-      const next = thisTimeRange.intersection(otherTimeRange);
+      const next = thisTimeRange.intersection(otherTimeRange, { keepValues });
       if (!next && results.length > 0) {
         break;
       }

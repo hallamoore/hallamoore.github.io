@@ -163,8 +163,75 @@ class TargetRow {
   }
 }
 
+class EmployeeRow {
+  constructor({ employee, startDate, duration }) {
+    this.element = elem("tr", { style: { height: "100%" } });
+    this.header = elem("td");
+    this.header.textContent = employee.name;
+    this.startDate = startDate;
+    this.duration = duration;
+    this.employee = employee;
+
+    this.updateDates({ startDate, duration });
+  }
+
+  updateDates({ startDate, duration }) {
+    const boundingTimeRange = new TimeRange(startDate, startDate.copy().increment(duration));
+    this.startDate = startDate;
+    this.duration = duration;
+    this.element.innerHTML = "";
+    this.element.appendChild(elem("td")); // take up first column where toggle for subtargets is
+    this.element.appendChild(this.header);
+
+    const cell = elem("td", {
+      colSpan: boundingTimeRange.duration().days,
+      style: { height: "100%" },
+    });
+    const innerContainer = elem("div", {
+      style: { display: "flex", height: "100%" },
+    });
+    cell.appendChild(innerContainer);
+    this.element.appendChild(cell);
+
+    const assignedRanges = this.employee.scheduledTimeRanges.intersection(boundingTimeRange, {
+      keepValues: ["targetHierarchy"],
+    });
+    if (assignedRanges.length === 0) return;
+
+    const unassignedTimeRanges = new TimeRangeCollection(boundingTimeRange).subtract(
+      assignedRanges
+    );
+    unassignedTimeRanges.forEach((timeRange) => (timeRange.unassigned = true));
+
+    const assignedAndUnassigned = unassignedTimeRanges.concat(assignedRanges);
+    // TODO: add sort function on TimeRangeCollection, consider adding check there to make sure
+    // ranges don't overlap
+    assignedAndUnassigned.sort((a, b) => (a.start > b.start ? 1 : -1));
+
+    let marginLeftPct = 0;
+    for (let timeRange of assignedAndUnassigned) {
+      const pct =
+        (timeRange.duration().milliseconds / boundingTimeRange.duration().milliseconds) * 100;
+      if (timeRange.unassigned) {
+        marginLeftPct += pct;
+      } else {
+        const block = elem("div", {
+          style: {
+            marginLeft: `${marginLeftPct}%`,
+            width: `${pct}%`,
+            backgroundColor: "blue",
+          },
+          title: timeRange.targetHierarchy.at(-1),
+        });
+        innerContainer.appendChild(block);
+        marginLeftPct = 0;
+      }
+    }
+  }
+}
+
 class Timeline {
-  constructor({ targets, startDate, duration, headerInterval }) {
+  constructor({ targets, employees, startDate, duration, headerInterval }) {
     this.startDate = startDate;
     this.duration = duration;
     this.headerInterval = headerInterval;
@@ -178,15 +245,32 @@ class Timeline {
     targets.sort(cmpKey("priority"));
     for (let target of targets) {
       const targetRow = new TargetRow({
-        target: target,
+        target,
         startDate,
         duration,
       });
       this.targetRows.push(targetRow);
       this.element.appendChild(targetRow.element);
     }
+    this.element.append(elem("br"));
+    this.element.append(elem("br"));
 
-    const dateControls = document.createElement("div");
+    this.employeeRows = [];
+    employees.sort(cmpKey("name"));
+    for (let employee of employees) {
+      const employeeRow = new EmployeeRow({
+        employee,
+        startDate,
+        duration,
+      });
+      this.employeeRows.push(employeeRow);
+      this.element.appendChild(employeeRow.element);
+    }
+
+    this.element.append(elem("br"));
+    this.element.append(elem("br"));
+
+    const dateControls = elem("div", { style: { display: "flex" } });
     const forward = document.createElement("button");
     forward.textContent = ">";
     forward.onclick = () => {
@@ -247,6 +331,9 @@ class Timeline {
     this.targetRows.forEach((targetRow) =>
       targetRow.updateDates({ startDate, duration, headerInterval })
     );
+    this.employeeRows.forEach((employeeRow) =>
+      employeeRow.updateDates({ startDate, duration, headerInterval })
+    );
   };
 }
 
@@ -256,10 +343,11 @@ function getStartDate() {
 }
 
 export default {
-  build({ targets }) {
+  build({ targets, employees }) {
     const startDate = getStartDate();
     const timeline = new Timeline({
       targets,
+      employees,
       startDate,
       duration: new TimeDelta({ days: 14 }),
       headerInterval: 1,

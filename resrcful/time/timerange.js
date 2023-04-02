@@ -48,13 +48,17 @@ export class TimeRange {
     return [other];
   }
 
-  intersection(other) {
+  intersection(other, { keepValues = [] } = {}) {
     if (this.end <= other.start || this.start >= other.end) {
       return null;
     }
     const start = this.start > other.start ? this.start : other.start;
     const end = this.end < other.end ? this.end : other.end;
-    return new TimeRange(start, end);
+    const result = new TimeRange(start, end);
+    keepValues.forEach((key) => {
+      result[key] = this[key];
+    });
+    return result;
   }
 
   moveBy(arg) {
@@ -86,7 +90,7 @@ export class WeeklyTimeRange extends TimeRange {
     return new TimeRange(start, end);
   }
 
-  intersection(other) {
+  intersection(other, { keepValues = [] } = {}) {
     if (
       this.endsBefore(other.start) ||
       this.startsAfter(other.end) ||
@@ -98,6 +102,10 @@ export class WeeklyTimeRange extends TimeRange {
     const thisAsTimeRange = this.toTimeRange(other.start);
     const start = thisAsTimeRange.start > other.start ? thisAsTimeRange.start : other.start;
     const end = thisAsTimeRange.end < other.end ? thisAsTimeRange.end : other.end;
-    return new TimeRange(start, end);
+    const result = new TimeRange(start, end);
+    keepValues.forEach((key) => {
+      result[key] = this[key];
+    });
+    return result;
   }
 }

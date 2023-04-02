@@ -14,7 +14,7 @@ export class Employee {
     hoursExceptions, // keys are of the form 'YYYY-MM-DD', values are a number indicating how many hours will be worked that day
   }) {
     this.name = name;
-    this._scheduledTimeRanges = new TimeRangeCollection();
+    this.scheduledTimeRanges = new TimeRangeCollection();
 
     // Convert hoursPerDay into workingHours format
     const weekStart = new DateTime().getEndOfWeek();
@@ -57,7 +57,7 @@ export class Employee {
 
   getUnscheduledRanges(boundingTimeRange) {
     const { additiveExceptions, subtractiveExceptions } = this.workingHoursExceptions;
-    const alreadyScheduled = this._scheduledTimeRanges.intersection(boundingTimeRange);
+    const alreadyScheduled = this.scheduledTimeRanges.intersection(boundingTimeRange);
 
     return this.workingHours
       .intersection(boundingTimeRange)

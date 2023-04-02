@@ -46,7 +46,7 @@ function assignTimeRanges({
         range.targetHierarchy = parentHierarchy.concat(target.name);
         assignedTimeRanges.push(range);
         target._scheduledTimeRanges.push(range);
-        employee._scheduledTimeRanges.push(range);
+        employee.scheduledTimeRanges.push(range);
       }
 
       if (target.unscheduledPersonHoursRemaining() <= 0) {
@@ -115,7 +115,7 @@ export function schedule({
     schedulerIterationId++;
   }
 
-  return { targets };
+  return { targets, employees };
 }
 
 function deepEqual(a, b) {
