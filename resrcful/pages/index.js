@@ -192,9 +192,6 @@ class InnerGrid {
 
     this.items = {};
     state.subscribe("insert", `${stateKey}.*`, this.addItem);
-    // TODO: subtargets aren't visually removed when their parents are deleted.  Refreshing shows
-    // that the subtargets are gone, but the UI should respond with the deletions immediately.
-    // Probably need to add some other subscriptions somewhere.
     state.subscribe("delete", `${stateKey}.*`, this.removeItem);
     this.loadItems();
   }
@@ -217,6 +214,7 @@ class InnerGrid {
     }
     if (this.anchor) {
       this.items[item.id].insertAfter(this.anchor);
+      this.anchor = this.items[item.id];
     }
   };
 
@@ -255,14 +253,11 @@ class InnerGrid {
 
 class Grid {
   constructor({ headers, stateKey, Item }) {
-    this.element = elem("div", {
-      style: {
-        display: "grid",
-        gridTemplateColumns: `auto repeat(${headers.length - 1}, 1fr)`,
-      },
-    });
+    this.element = elem("table");
 
-    headers.forEach((header) => this.element.appendChild(elem("div", { textContent: header })));
+    this.headers = elem("tr");
+    headers.forEach((header) => this.headers.appendChild(elem("th", { textContent: header })));
+    this.element.appendChild(this.headers);
 
     new InnerGrid({ stateKey, Item }).appendTo(this.element);
   }
@@ -270,6 +265,8 @@ class Grid {
 
 class Item {
   constructor(item, { stateKey, statePrefix = `${stateKey}.${item.id}`, fields, marginLeft } = {}) {
+    this.element = elem("tr");
+
     const basicField = (key) => statefulInput({ stateKey: `${statePrefix}.${key}` });
     const arrayField = (key) => statefulArrayInput({ stateKey: `${statePrefix}.${key}` });
 
@@ -288,38 +285,44 @@ class Item {
     this.fields.push(deleteBtn);
 
     this.fields[0].style.marginLeft = marginLeft;
-  }
-
-  appendTo(node) {
-    this.fields.forEach((field) => node.appendChild(field));
-  }
-
-  insertAfter(node) {
-    let previousNode = node;
     this.fields.forEach((field) => {
-      previousNode.after(field);
-      previousNode = field;
+      const cell = elem("td");
+      cell.appendChild(field);
+      this.element.appendChild(cell);
     });
   }
 
+  appendTo(node) {
+    node.appendChild(this.element);
+  }
+
+  insertAfter(node) {
+    if (node.anchor) {
+      return this.insertAfter(node.anchor);
+    }
+    node.after(this.element);
+  }
+
   remove() {
-    this.fields.forEach((field) => field.remove());
+    this.element.remove();
   }
 }
 
 class NewItem {
-  constructor({ stateKey, displayName, defaults }) {
+  constructor({ stateKey, displayName, btnStyle, defaults }) {
     this.stateKey = stateKey;
     this.displayName = displayName;
     this.defaults = defaults;
 
-    this.element = elem("div");
+    this.element = elem("tr");
+    const cell = elem("td");
     const button = elem("button", {
       textContent: `Create New ${displayName}`,
       onclick: this.createItem,
+      style: btnStyle,
     });
-
-    this.element.appendChild(button);
+    cell.appendChild(button);
+    this.element.appendChild(cell);
   }
 
   createItem = () => {
@@ -336,7 +339,6 @@ class TargetList extends Grid {
   constructor() {
     super({
       headers: [
-        "",
         "Name",
         "Priority",
         "Can Be Done By",
@@ -368,64 +370,62 @@ class Target extends Item {
       ...opts,
     });
     let subTargetsExpanded = false;
-    let newSubtarget;
-    let subTargetInnerGrid;
-    this.fields.splice(
-      0,
-      0,
-      elem("button", {
-        textContent: ">",
-        style: { marginLeft },
-        onclick: (ev) => {
-          subTargetsExpanded = !subTargetsExpanded;
+    const btn = elem("button", {
+      textContent: ">",
+      style: { marginLeft },
+      onclick: (ev) => {
+        subTargetsExpanded = !subTargetsExpanded;
 
-          if (subTargetsExpanded) {
-            ev.target.textContent = "v";
+        if (subTargetsExpanded) {
+          ev.target.textContent = "v";
 
-            const subStateKey = `${stateKey}.${target.id}.subtargets`;
-            if (!state.getValue(subStateKey)) {
-              state.insertValue(subStateKey, {});
-            }
-
-            // TODO: Visual bug
-            // 1. Expand first (out of two) targets (Target A)
-            // 2. Create new subtarget -- Target A1
-            // 3. Expand Target A1
-            // 4. Create new subtarget for A1 -- Target A1i
-            // 5. Back up to A (but leave everything expanded), create new subtarget -- Target A2
-            // Target A2 is added above Target A1???
-            // Also collapsing everything and then trying to expand A1 again throws an error
-            // And not collapsing everything in order also seems to not collapse lower levels
-            if (!newSubtarget) {
-              newSubtarget = new NewTarget({ stateKey: subStateKey, displayName: "Sub-Target" })
-                .element;
-              newSubtarget.style.gridColumnEnd = `span ${this.fields.length}`;
-              newSubtarget.style.marginLeft = addPx(marginLeft, 30);
-            }
-            this.fields.at(-1).after(newSubtarget);
-
-            if (!subTargetInnerGrid) {
-              subTargetInnerGrid = new InnerGrid({
-                stateKey: subStateKey,
-                Item: Target,
-                marginLeft: addPx(marginLeft, 30),
-              });
-            }
-            subTargetInnerGrid.insertAfter(this.fields.at(-1));
-          } else {
-            ev.target.textContent = ">";
-            newSubtarget.remove();
-            subTargetInnerGrid.remove();
+          const subStateKey = `${stateKey}.${target.id}.subtargets`;
+          if (!state.getValue(subStateKey)) {
+            state.insertValue(subStateKey, {});
           }
-        },
-      })
-    );
+
+          if (!this.newSubtarget) {
+            this.newSubtarget = new NewTarget({
+              stateKey: subStateKey,
+              displayName: "Sub-Target",
+              btnStyle: { marginLeft: addPx(marginLeft, 30) },
+            }).element;
+          }
+          this.element.after(this.newSubtarget);
+
+          if (!this.subTargetInnerGrid) {
+            this.subTargetInnerGrid = new InnerGrid({
+              stateKey: subStateKey,
+              Item: Target,
+              marginLeft: addPx(marginLeft, 30),
+            });
+          }
+          this.subTargetInnerGrid.insertAfter(this.element);
+        } else {
+          ev.target.textContent = ">";
+          this.newSubtarget.remove();
+          this.subTargetInnerGrid.remove();
+        }
+      },
+    });
+
+    this.element.children[0].prepend(btn);
+  }
+
+  get anchor() {
+    return this.newSubtarget || this.element;
+  }
+
+  remove() {
+    super.remove();
+    this.subTargetInnerGrid?.remove();
+    this.newSubtarget?.remove();
   }
 }
 
 class NewTarget extends NewItem {
-  constructor({ stateKey = "targets", displayName = "Target" } = {}) {
-    super({ stateKey, displayName });
+  constructor({ stateKey = "targets", displayName = "Target", ...rest } = {}) {
+    super({ stateKey, displayName, ...rest });
   }
 }
 
@@ -461,11 +461,12 @@ class Employee extends Item {
 }
 
 class NewEmployee extends NewItem {
-  constructor() {
+  constructor(args = {}) {
     super({
       stateKey: "employees",
       displayName: "Employee",
       defaults: { hoursPerDay: "0,8,8,8,8,8,0", hoursExceptions: "{}" },
+      ...args,
     });
   }
 }
@@ -498,7 +499,6 @@ class TimelineWrapper {
       this.loading.remove();
       this.timeline = Timeline.build(results);
       this.element.appendChild(this.timeline);
-      // console.assert(document.body.innerHTML === expected, "BROKE THE THING");
     };
     this.element.appendChild(calculate);
   }
@@ -526,5 +526,3 @@ export default {
     return new IndexWrapper().element;
   },
 };
-
-const expected = `<div><h2>Targets</h2><div><div style="display: grid; grid-template-columns: auto repeat(6, 1fr);"><div></div><div>Name</div><div>Priority</div><div>Can Be Done By</div><div>Person Hours Remaining</div><div>Blocked By</div><div>Delete</div><button>&gt;</button><input><input><input><input><input><button>delete</button><button>&gt;</button><input><input><input><input><input><button>delete</button><button>&gt;</button><input><input><input><input><input><button>delete</button></div><div><button>Create New Target</button></div></div><h2>Employees</h2><div><div style="display: grid; grid-template-columns: auto repeat(3, 1fr);"><div>Name</div><div>Usual Hours Per Day</div><div>Hours Exceptions</div><div>Delete</div><input><input><input><button>delete</button></div><div><button>Create New Employee</button></div></div><h2>Schedule</h2><div><button id="calculate">Calculate</button><table style="width: 100%;"><tr><th></th><th></th><th colspan="1">4/1</th><th colspan="1">4/2</th><th colspan="1">4/3</th><th colspan="1">4/4</th><th colspan="1">4/5</th><th colspan="1">4/6</th><th colspan="1">4/7</th><th colspan="1">4/8</th><th colspan="1">4/9</th><th colspan="1">4/10</th><th colspan="1">4/11</th><th colspan="1">4/12</th><th colspan="1">4/13</th><th colspan="1">4/14</th></tr><tr><td><button>&gt;</button></td><td>Target A</td><td colspan="2"></td><td colspan="2"><hr></td></tr><tr><td></td><td>Target B</td><td colspan="4"></td><td style="background-color: blue;" colspan="1"></td><td style="background-color: blue;" colspan="1"></td><td style="background-color: blue;" colspan="1"></td></tr><tr><td><button>&gt;</button></td><td>Target C</td><td colspan="9"></td><td colspan="5"><hr></td></tr><div><button>Today</button><button>&lt;</button><button>&gt;</button></div></table></div></div>`;
