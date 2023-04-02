@@ -16,12 +16,11 @@ function assignTimeRanges({
   prioritizedUnfinishedTargets,
   targetsByName,
   parentHierarchy = [],
-  schedulerIterationId,
   boundingTimeRange,
 }) {
   let assignedTimeRanges = [];
   for (let target of prioritizedUnfinishedTargets) {
-    if (target.isBlocked(schedulerIterationId)) continue;
+    if (target.isBlockedAt(boundingTimeRange.start)) continue;
 
     if (target.hasSubtargets) {
       const subAssignedTimeRanges = assignTimeRanges({
@@ -29,7 +28,6 @@ function assignTimeRanges({
           Object.values(target.subtargets)
         ),
         targetsByName,
-        schedulerIterationId,
         boundingTimeRange,
         parentHierarchy: parentHierarchy.concat(target.name),
       });
@@ -43,16 +41,18 @@ function assignTimeRanges({
       const availableRanges = employee.getUnscheduledRanges(boundingTimeRange);
       if (availableRanges.length === 0) continue;
 
+      let finishedAt;
       for (let range of availableRanges) {
         range.targetHierarchy = parentHierarchy.concat(target.name);
         range.employeeName = employeeName;
         assignedTimeRanges.push(range);
         target._scheduledTimeRanges.push(range);
         employee.scheduledTimeRanges.push(range);
+        finishedAt = range.end;
       }
 
       if (target.unscheduledPersonHoursRemaining() <= 0) {
-        target.schedulerProperties.finishedAt = schedulerIterationId;
+        target.schedulerProperties.finishedAt = finishedAt;
         break;
       }
 
@@ -91,7 +91,6 @@ export function schedule({
 
   let assignedTimeRanges = [];
   let consecutiveRoundsWithoutProgress = 0;
-  let schedulerIterationId = 0;
   let prioritizedUnfinishedTargets = getPrioritizedUnfinishedTargets(targets);
   const boundingTimeRange = new TimeRange(
     startDate,
@@ -102,7 +101,6 @@ export function schedule({
     const currAssignedTimeRanges = assignTimeRanges({
       prioritizedUnfinishedTargets,
       targetsByName,
-      schedulerIterationId,
       boundingTimeRange,
     });
     assignedTimeRanges = assignedTimeRanges.concat(currAssignedTimeRanges);
@@ -119,7 +117,11 @@ export function schedule({
     }
 
     boundingTimeRange.moveBy(iterationIncrement);
-    schedulerIterationId++;
+  }
+  if (consecutiveRoundsWithoutProgress != 0) {
+    console.warn(
+      `Didn't finish scheduling, logic didn't make any progress for ${consecutiveRoundsWithoutProgress} rounds`
+    );
   }
 
   return { targets, employees };

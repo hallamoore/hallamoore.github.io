@@ -1,5 +1,6 @@
 import { TimeRangeCollection } from "./time/timerange_collection.js";
 import { TimeRange } from "./time/timerange.js";
+import { DateTime } from "./time/datetime.js";
 
 let targets = {};
 
@@ -10,7 +11,7 @@ export class Target {
       name, // string
       canBeDoneBy, // array of employee names, not ids (yet)
       personHoursRemaining, // optional number
-      blockedBy, // array of target names, not ids (yet)
+      blockers = {}, // obj of {blockerKey: leadTime} where blockerKey is either the name of another target or a date in YYYY-MM-DD format and leadTime is how many hours after the blocker is resolved before work can actually begin
       priority = Infinity, // number, lower numbers are higher priority
       subtargets = {}, // keys are ids, values are recursive instances of these same arguments
       maxAssigneesAtOnce = Infinity, // number, how many employees can be assigned to a target during the same time range
@@ -28,7 +29,11 @@ export class Target {
       typeof personHoursRemaining === "string"
         ? parseFloat(personHoursRemaining)
         : personHoursRemaining;
-    this.blockedBy = blockedBy;
+    this.blockers = blockers
+      ? typeof blockers === "string"
+        ? JSON.parse(blockers)
+        : blockers
+      : {};
     this.maxAssigneesAtOnce = maxAssigneesAtOnce;
     this.hasSubtargets = false;
     this.subtargets = Object.entries(subtargets).reduce((obj, [subId, subtarget]) => {
@@ -38,9 +43,7 @@ export class Target {
     }, {});
     this._scheduledTimeRanges = new TimeRangeCollection();
     this.schedulerProperties = {
-      // Not a date, but an identifier specifying which scheduler iteration the target reach 0
-      // unscheduledPersonHoursRemaining
-      finishedAt: undefined,
+      finishedAt: null, // DateTime representing the end of the last assigned TimeRange when unscheduledPersonHoursRemaining reached 0.
     };
   }
 
@@ -109,16 +112,18 @@ export class Target {
     );
   }
 
-  isBlocked(schedulerIterationId) {
-    // TODO: make it clearer that this returns whether the target is blocked at the current
-    // iteration of the scheduler, not whether it's blocked today.
-    return this.blockedBy?.some((blockingTargetName) => {
-      // TODO: store blocking target ids instead of names
-      const blockingTarget = Object.values(targets).find((t) => t.name == blockingTargetName);
-      return (
-        blockingTarget.unscheduledPersonHoursRemaining() > 0 ||
-        blockingTarget.schedulerProperties.finishedAt === schedulerIterationId
-      );
+  isBlockedAt(startDate) {
+    return Object.entries(this.blockers).some(([blockerKey, leadTime]) => {
+      let blockerDate;
+      if (blockerKey.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)) {
+        blockerDate = DateTime.fromDateStr(blockerKey);
+      } else {
+        // TODO: store blocking target ids instead of names
+        const blockingTarget = Object.values(targets).find((t) => t.name == blockerKey);
+        blockerDate = blockingTarget.schedulerProperties.finishedAt?.copy();
+      }
+      const unblockedAt = blockerDate?.increment({ hours: leadTime });
+      return !unblockedAt || unblockedAt > startDate;
     });
   }
 }
