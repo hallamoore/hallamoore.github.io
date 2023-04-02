@@ -155,6 +155,7 @@ class TargetRow {
             width: `${pct}%`,
             backgroundColor: "blue",
           },
+          title: timeRange.employeeNames.join(", "),
         });
         innerContainer.appendChild(block);
         marginLeftPct = 0;

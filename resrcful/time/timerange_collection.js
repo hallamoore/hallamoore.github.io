@@ -67,10 +67,6 @@ export class TimeRangeCollection extends Array {
   concat(other) {
     return new this.constructor(...this, ...other);
   }
-
-  consolidate() {
-    return this.length > 0 ? this.union([this[0]]) : new this.constructor();
-  }
 }
 
 export class WeeklyTimeRangeCollection extends TimeRangeCollection {

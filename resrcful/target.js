@@ -1,4 +1,5 @@
 import { TimeRangeCollection } from "./time/timerange_collection.js";
+import { TimeRange } from "./time/timerange.js";
 
 let targets = {};
 
@@ -72,9 +73,29 @@ export class Target {
 
   mergedScheduledTimeRanges(boundingTimeRange) {
     // In contrast to scheduledTimeRanges(), each time period only appears once in this return value
-    return this.scheduledTimeRanges()
-      .intersection(boundingTimeRange)
-      .consolidate();
+    const bounded = this.scheduledTimeRanges().intersection(boundingTimeRange, {
+      keepValues: ["employeeName"],
+    });
+    const results = new TimeRangeCollection();
+    let last;
+    for (let timeRange of bounded) {
+      if (!last) {
+        last = timeRange;
+        last.employeeNames = [];
+      }
+
+      if (timeRange.start.getTimestamp() === last.start.getTimestamp()) {
+        if (timeRange.end.getTimestamp() !== last.end.getTimestamp()) {
+          throw new Error("Expected time ranges to all be scheduled with the same interval");
+        }
+        last.employeeNames.push(timeRange.employeeName);
+      } else {
+        results.push(last);
+        last = timeRange;
+        last.employeeNames = [timeRange.employeeName];
+      }
+    }
+    return results;
   }
 
   unscheduledPersonHoursRemaining() {

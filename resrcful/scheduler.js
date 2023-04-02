@@ -44,6 +44,7 @@ function assignTimeRanges({
 
       for (let range of availableRanges) {
         range.targetHierarchy = parentHierarchy.concat(target.name);
+        range.employeeName = employeeName;
         assignedTimeRanges.push(range);
         target._scheduledTimeRanges.push(range);
         employee.scheduledTimeRanges.push(range);
