@@ -27,7 +27,7 @@ function cmp(a, b) {
   return a > b ? 1 : b > a ? -1 : 0;
 }
 
-export function cmpKey(key) {
+function cmpKey(key) {
   return (a, b) => cmp(a[key], b[key]);
 }
 

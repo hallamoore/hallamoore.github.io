@@ -1,7 +1,7 @@
 "use strict";
 import { getCookie } from "../cookies.js";
 import { Redirect } from "../router.js";
-import Timeline, { cmpKey } from "../components/timeline.js";
+import Timeline from "../components/timeline.js";
 import { schedule } from "../scheduler.js";
 
 function elem(tag, args = {}) {
@@ -16,6 +16,15 @@ function elem(tag, args = {}) {
     });
   }
   return node;
+}
+
+function parsePriority(p) {
+  let result = parseInt(p);
+  return isNaN(result) ? Infinity : result;
+}
+
+function cmpPriority(a, b) {
+  return parsePriority(a.priority) > parsePriority(b.priority) ? 1 : -1;
 }
 
 const remote = {
@@ -378,7 +387,7 @@ class TargetList extends Grid {
       ],
       stateKey: "targets",
       Item: Target,
-      sortFn: cmpKey("priority"),
+      sortFn: cmpPriority,
     });
   }
 }
@@ -431,7 +440,7 @@ class Target extends Item {
               stateKey: subStateKey,
               Item: Target,
               marginLeft: addPx(marginLeft, 30),
-              sortFn: cmpKey("priority"),
+              sortFn: cmpPriority,
             });
             subtargetsContainer.appendChild(this.subTargetInnerGrid.element);
           }
