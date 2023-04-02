@@ -274,7 +274,7 @@ class InnerGrid {
 function row() {
   return elem("div", {
     className: "row",
-    style: { display: "grid", gridTemplateColumns: "20% repeat(5, 1fr)" },
+    style: { display: "grid", gridTemplateColumns: "20% repeat(6, 1fr)" },
   });
 }
 
@@ -354,6 +354,7 @@ class TargetList extends Grid {
         "Can Be Done By",
         "Person Hours Remaining",
         "Blocked By",
+        "Max People At Once",
         "Delete",
       ],
       stateKey: "targets",
@@ -377,6 +378,7 @@ class Target extends Item {
         { key: "canBeDoneBy", type: "array" },
         { key: "personHoursRemaining", type: "basic" },
         { key: "blockedBy", type: "array" },
+        { key: "maxAssigneesAtOnce", type: "basic" },
       ],
       ...opts,
     });
@@ -389,7 +391,7 @@ class Target extends Item {
     this.priorityField = this.fields[1];
     this.priorityField.disabled = true;
 
-    const subtargetsContainer = elem("div", { style: { gridColumnEnd: "span 6" } });
+    const subtargetsContainer = elem("div", { style: { gridColumnEnd: "span 7" } });
 
     let subTargetsExpanded = false;
     const btn = elem("button", {

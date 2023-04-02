@@ -13,6 +13,7 @@ export class Target {
       blockedBy, // array of target names, not ids (yet)
       priority = Infinity, // number, lower numbers are higher priority
       subtargets = {}, // keys are ids, values are recursive instances of these same arguments
+      maxAssigneesAtOnce = Infinity, // number, how many employees can be assigned to a target during the same time range
     }
   ) {
     if (targets.hasOwnProperty(id)) throw new Error(`Target with id '${id}' already exists`);
@@ -28,6 +29,7 @@ export class Target {
         ? parseFloat(personHoursRemaining)
         : personHoursRemaining;
     this.blockedBy = blockedBy;
+    this.maxAssigneesAtOnce = maxAssigneesAtOnce;
     this.hasSubtargets = false;
     this.subtargets = Object.entries(subtargets).reduce((obj, [subId, subtarget]) => {
       this.hasSubtargets = true;

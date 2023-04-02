@@ -37,6 +37,7 @@ function assignTimeRanges({
       continue;
     }
 
+    let numEmployeesAssignedToTarget = 0;
     for (let employeeName of target.canBeDoneBy) {
       const employee = employeesByName[employeeName];
       const availableRanges = employee.getUnscheduledRanges(boundingTimeRange);
@@ -52,6 +53,11 @@ function assignTimeRanges({
 
       if (target.unscheduledPersonHoursRemaining() <= 0) {
         target.schedulerProperties.finishedAt = schedulerIterationId;
+        break;
+      }
+
+      numEmployeesAssignedToTarget++;
+      if (numEmployeesAssignedToTarget >= target.maxAssigneesAtOnce) {
         break;
       }
     }
