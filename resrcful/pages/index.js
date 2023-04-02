@@ -169,6 +169,25 @@ function trackState(elem, dest, src, { transform = (x) => x || "" } = {}) {
 
 function statefulInput({ stateKey, loadTransform = (x) => x || "", saveTransform = (x) => x }) {
   const node = elem("input");
+
+  // You can't select text in an input element if it's nested within a draggable element.  To get
+  // around this, we remove all the parent draggable attributes on mousedown (on an input), and
+  // restore them on mouseup (anywhere).
+  let dragSuspendedElems = [];
+  node.onmousedown = (ev) => {
+    let closest = ev.target.closest(".row");
+    while (closest) {
+      closest.draggable = false;
+      dragSuspendedElems.push(closest);
+      closest = closest.parentElement.closest(".row");
+    }
+  };
+
+  document.body.addEventListener("mouseup", (ev) => {
+    dragSuspendedElems.forEach((node) => (node.draggable = true));
+    dragSuspendedElems = [];
+  });
+
   trackState(node, "value", stateKey, { transform: loadTransform });
   node.onchange = () => state.updateValue(stateKey, saveTransform(node.value));
   return node;
