@@ -90,7 +90,8 @@ export class WeeklyTimeRange extends TimeRange {
     if (
       this.endsBefore(other.start) ||
       this.startsAfter(other.end) ||
-      this.start.equals(other.end)
+      this.start.equals(other.end) ||
+      this.end.equals(other.start)
     ) {
       return null;
     }

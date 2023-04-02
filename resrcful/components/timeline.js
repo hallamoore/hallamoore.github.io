@@ -33,7 +33,7 @@ function cmpKey(key) {
 
 class TargetRow {
   constructor({ target, startDate, duration }) {
-    this.element = elem("tr");
+    this.element = elem("tr", { style: { height: "100%" } });
     this.subtargetControls = elem("td");
     this.header = elem("td");
     this.header.textContent = target.name;
@@ -88,32 +88,47 @@ class TargetRow {
       subtargetRow.updateDates({ startDate, duration })
     );
 
+    const boundingTimeRange = new TimeRange(startDate, startDate.copy().increment(duration));
     this.startDate = startDate;
     this.duration = duration;
     this.element.innerHTML = "";
     this.element.appendChild(this.subtargetControls);
     this.element.appendChild(this.header);
 
-    const boundingTimeRange = new TimeRange(startDate, startDate.copy().increment(duration));
+    const cell = elem("td", {
+      colSpan: boundingTimeRange.duration().days,
+      style: { height: "100%" },
+    });
+    const innerContainer = elem("div", {
+      style: { display: "flex", height: "100%" },
+    });
+    cell.appendChild(innerContainer);
+    this.element.appendChild(cell);
 
     const assignedRanges = this.target.mergedScheduledTimeRanges(boundingTimeRange);
     if (assignedRanges.length === 0) return;
 
     if (this.target.hasSubtargets) {
       const targetTimeRange = getTargetTimeRange(assignedRanges);
-      const colSpan = Math.ceil(targetTimeRange.duration().days);
-      const emptyBlockColSpan = Math.floor(targetTimeRange.start.subtract(startDate).days);
+      const marginLeftPct =
+        (targetTimeRange.start.subtract(boundingTimeRange.start).milliseconds /
+          boundingTimeRange.duration().milliseconds) *
+        100;
+      const widthPct =
+        (targetTimeRange.duration().milliseconds / boundingTimeRange.duration().milliseconds) * 100;
 
-      if (emptyBlockColSpan > 0) {
-        const emptyBlock = elem("td");
-        emptyBlock.colSpan = emptyBlockColSpan;
-        this.element.appendChild(emptyBlock);
-      }
-      if (colSpan > 0) {
-        const block = elem("td", { innerHTML: "<hr/>" });
-        block.colSpan = colSpan;
-        this.element.appendChild(block);
-      }
+      const color1 = "rgba(0, 0, 0, 0.8)";
+      const color2 = "rgba(255, 255, 255, 0.3)";
+      const block = elem("div", {
+        style: {
+          marginLeft: `${marginLeftPct}%`,
+          width: `${widthPct}%`,
+          height: "50%",
+          backgroundColor: "blue",
+          backgroundImage: `linear-gradient(45deg, ${color1} 0%, ${color2} 25%,  ${color1} 50%, ${color2} 75%, ${color1} 100%)`,
+        },
+      });
+      innerContainer.appendChild(block);
       return;
     }
 
@@ -127,21 +142,22 @@ class TargetRow {
     // ranges don't overlap
     assignedAndUnassigned.sort((a, b) => (a.start > b.start ? 1 : -1));
 
+    let marginLeftPct = 0;
     for (let timeRange of assignedAndUnassigned) {
-      const block = elem("td");
-      let colSpan = 0;
+      const pct =
+        (timeRange.duration().milliseconds / boundingTimeRange.duration().milliseconds) * 100;
       if (timeRange.unassigned) {
-        // Display partially assigned days as fully assigned. This means empty blocks get truncated.
-        colSpan = Math.floor(timeRange.end.subtract(timeRange.start).days);
+        marginLeftPct += pct;
       } else {
-        block.style.backgroundColor = "blue";
-        // Display partially assigned days as fully assigned. This means assigned blocks get expanded.
-        colSpan = Math.ceil(timeRange.end.subtract(timeRange.start).days);
-      }
-      // need colSpan as it's own var bc if we directly assign 0 to block.colSpan, it turns into 1
-      if (colSpan != 0) {
-        block.colSpan = colSpan;
-        this.element.appendChild(block);
+        const block = elem("div", {
+          style: {
+            marginLeft: `${marginLeftPct}%`,
+            width: `${pct}%`,
+            backgroundColor: "blue",
+          },
+        });
+        innerContainer.appendChild(block);
+        marginLeftPct = 0;
       }
     }
   }
@@ -153,7 +169,7 @@ class Timeline {
     this.duration = duration;
     this.headerInterval = headerInterval;
 
-    this.element = elem("table", { style: { width: "100%" } });
+    this.element = elem("table", { style: { width: "100%", tableLayout: "fixed" } });
     this.headers = elem("tr");
     this.element.appendChild(this.headers);
     this._updateDateHeaders({ startDate, duration, headerInterval });
@@ -197,8 +213,8 @@ class Timeline {
 
   _updateDateHeaders() {
     this.headers.innerHTML = "";
-    this.headers.appendChild(elem("th")); // Corner header
-    this.headers.appendChild(elem("th"));
+    this.headers.appendChild(elem("th", { style: { width: "20px" } })); // Corner header
+    this.headers.appendChild(elem("th", { style: { width: "20%" } }));
 
     const endDate = this.startDate.copy().increment(this.duration);
     let date = this.startDate.copy();
@@ -211,7 +227,7 @@ class Timeline {
       header.colSpan = Math.min(this.headerInterval, (endDate - date) / 1000 / 60 / 60 / 24);
       // Can't really align center when headerInterval is more than 1.
       // The date represents the first column, not the middle one.
-      // header.style.textAlign = "center";
+      header.style.textAlign = "left";
       header.textContent = `${date.getMonth()}/${date.getDayOfMonth()}`;
       this.headers.appendChild(header);
       date.increment({ days: this.headerInterval });

@@ -1,5 +1,6 @@
 import { DateTime, WeeklyDateTime } from "./time/datetime.js";
 import { TimeRange, WeeklyTimeRange } from "./time/timerange.js";
+import { TimeDelta } from "./time/timedelta.js";
 import { TimeRangeCollection, WeeklyTimeRangeCollection } from "./time/timerange_collection.js";
 import { Target } from "./target.js";
 import { Employee } from "./employee.js";
@@ -66,6 +67,7 @@ export function schedule({
   employees,
   // if this is changed, make sure to change the startDate in Timeline too
   startDate = new DateTime().toStartOfDay(),
+  iterationIncrement = new TimeDelta({ hours: 1 }),
 }) {
   employees = employees.map((emp) => {
     emp = new Employee(emp);
@@ -84,9 +86,12 @@ export function schedule({
   let consecutiveRoundsWithoutProgress = 0;
   let schedulerIterationId = 0;
   let prioritizedUnfinishedTargets = getPrioritizedUnfinishedTargets(targets);
-  const boundingTimeRange = new TimeRange(startDate, startDate.copy().increment({ days: 1 }));
+  const boundingTimeRange = new TimeRange(
+    startDate,
+    startDate.copy().increment(iterationIncrement)
+  );
 
-  while (consecutiveRoundsWithoutProgress < 10) {
+  while (consecutiveRoundsWithoutProgress < 100) {
     const currAssignedTimeRanges = assignTimeRanges({
       prioritizedUnfinishedTargets,
       targetsByName,
@@ -106,7 +111,7 @@ export function schedule({
       consecutiveRoundsWithoutProgress = 0;
     }
 
-    boundingTimeRange.moveBy({ days: 1 });
+    boundingTimeRange.moveBy(iterationIncrement);
     schedulerIterationId++;
   }
 
