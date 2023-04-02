@@ -1,7 +1,7 @@
 "use strict";
 import { getCookie } from "../cookies.js";
 import { Redirect } from "../router.js";
-import Timeline from "../components/timeline.js";
+import Timeline, { cmpKey } from "../components/timeline.js";
 import { schedule } from "../scheduler.js";
 
 function elem(tag, args = {}) {
@@ -183,12 +183,16 @@ function statefulArrayInput({ stateKey }) {
 }
 
 class InnerGrid {
-  constructor({ stateKey, Item, marginLeft }) {
+  constructor({ stateKey, Item, marginLeft, sortFn }) {
     this.stateKey = stateKey;
     this.Item = Item;
     this.marginLeft = marginLeft;
+    this.sortFn = sortFn;
+
+    this.element = elem("div");
 
     this.loading = elem("div", { textContent: "loading" });
+    this.element.appendChild(this.loading);
 
     this.items = {};
     state.subscribe("insert", `${stateKey}.*`, this.addItem);
@@ -196,76 +200,103 @@ class InnerGrid {
     this.loadItems();
   }
 
+  onDragOver = (ev) => {
+    ev.preventDefault();
+    // TODO: allow moving targets into other subtarget lists, just can't move target into
+    // it's own subtargets.
+    for (let node of this.element.childNodes) {
+      if (node.contains(ev.target)) {
+        lastRow = node;
+        break;
+      }
+    }
+    if (lastRow) {
+      const blah = lastRow.getBoundingClientRect();
+      const mid = blah.top + blah.height / 2;
+      if (ev.clientY > mid) {
+        lastRow.after(visualizer);
+      } else {
+        lastRow.before(visualizer);
+      }
+    }
+  };
+  onDrop = (ev) => {
+    ev.preventDefault();
+    visualizer.after(dragging);
+    // visualizer also gets removed in ondragend, so that it gets removed when drag is cancelled,
+    // but we need to removed it before calling onOrderChanged so that the visualizer doesn't
+    // take up a priority slot.
+    visualizer.remove();
+    this.onOrderChanged();
+  };
+
   async loadItems() {
     await state.load();
     this.loading.remove();
     this.loading = null;
-    const items = state.getValue(this.stateKey) || [];
-    Object.values(items).forEach((item) => this.addItem(item));
+    const items = Object.values(state.getValue(this.stateKey) || {});
+    if (this.sortFn) {
+      items.sort(this.sortFn);
+    }
+    items.forEach((item) => this.addItem(item));
   }
 
-  addItem = (item) => {
-    this.items[item.id] = new this.Item(item, {
+  addItem = (_item) => {
+    const item = new this.Item(_item, {
       stateKey: this.stateKey,
       marginLeft: this.marginLeft,
     });
-    if (this.parent) {
-      this.items[item.id].appendTo(this.parent);
-    }
-    if (this.anchor) {
-      this.items[item.id].insertAfter(this.anchor);
-      this.anchor = this.items[item.id];
-    }
+    this.items[_item.id] = item;
+    item.onDragStart = () => {
+      this.element.ondragover = this.onDragOver;
+      this.element.ondrop = this.onDrop;
+    };
+    item.onDragEnd = () => {
+      this.element.ondragover = undefined;
+      this.element.ondrop = undefined;
+    };
+    this.element.appendChild(item.element);
   };
 
   removeItem = (itemId) => {
-    this.items[itemId].remove();
+    this.items[itemId].element.remove();
     delete this.items[itemId];
   };
 
-  appendTo(node) {
-    this.parent = node;
-    if (this.loading) {
-      node.appendChild(this.loading);
-    } else {
-      Object.values(this.items).appendTo(node);
-    }
-  }
-
-  insertAfter(anchor) {
-    this.anchor = anchor;
-    if (this.loading) {
-      // Don't set the this.anchor to the loading element. The loading element gets removed
-      // before the items are added to the DOM, so there would be nowhere to anchor to.
-      return this.anchor.after(this.loading);
-    }
-
-    for (let item of Object.values(this.items)) {
-      item.insertAfter(this.anchor);
-      this.anchor = item;
-    }
-  }
-
-  remove() {
-    Object.values(this.items).forEach((item) => item.remove());
+  onOrderChanged() {
+    const rows = [...this.element.childNodes];
+    Object.values(this.items).forEach((item) =>
+      item.onOrderChanged?.(rows.findIndex((x) => x === item.element))
+    );
   }
 }
 
-class Grid {
-  constructor({ headers, stateKey, Item }) {
-    this.element = elem("table");
+function row() {
+  return elem("div", {
+    className: "row",
+    style: { display: "grid", gridTemplateColumns: "20% repeat(5, 1fr)" },
+  });
+}
 
-    this.headers = elem("tr");
+let visualizer = elem("div", { style: { height: "2px", width: "100%", backgroundColor: "blue" } });
+let lastRow;
+let dragging;
+
+class Grid {
+  constructor({ headers, stateKey, Item, sortFn }) {
+    this.element = elem("div");
+
+    this.headers = row();
     headers.forEach((header) => this.headers.appendChild(elem("th", { textContent: header })));
     this.element.appendChild(this.headers);
 
-    new InnerGrid({ stateKey, Item }).appendTo(this.element);
+    this.element.appendChild(new InnerGrid({ stateKey, Item, sortFn }).element);
   }
 }
 
 class Item {
   constructor(item, { stateKey, statePrefix = `${stateKey}.${item.id}`, fields, marginLeft } = {}) {
-    this.element = elem("tr");
+    this.element = row();
 
     const basicField = (key) => statefulInput({ stateKey: `${statePrefix}.${key}` });
     const arrayField = (key) => statefulArrayInput({ stateKey: `${statePrefix}.${key}` });
@@ -286,25 +317,8 @@ class Item {
 
     this.fields[0].style.marginLeft = marginLeft;
     this.fields.forEach((field) => {
-      const cell = elem("td");
-      cell.appendChild(field);
-      this.element.appendChild(cell);
+      this.element.appendChild(field);
     });
-  }
-
-  appendTo(node) {
-    node.appendChild(this.element);
-  }
-
-  insertAfter(node) {
-    if (node.anchor) {
-      return this.insertAfter(node.anchor);
-    }
-    node.after(this.element);
-  }
-
-  remove() {
-    this.element.remove();
   }
 }
 
@@ -314,15 +328,11 @@ class NewItem {
     this.displayName = displayName;
     this.defaults = defaults;
 
-    this.element = elem("tr");
-    const cell = elem("td");
-    const button = elem("button", {
+    this.element = elem("button", {
       textContent: `Create New ${displayName}`,
       onclick: this.createItem,
       style: btnStyle,
     });
-    cell.appendChild(button);
-    this.element.appendChild(cell);
   }
 
   createItem = () => {
@@ -348,6 +358,7 @@ class TargetList extends Grid {
       ],
       stateKey: "targets",
       Item: Target,
+      sortFn: cmpKey("priority"),
     });
   }
 }
@@ -369,10 +380,20 @@ class Target extends Item {
       ],
       ...opts,
     });
+    const nameField = this.fields[0];
+    nameField.style.flexGrow = 1;
+    const container = elem("div", { style: { display: "flex" } });
+    container.appendChild(nameField);
+    this.element.prepend(container);
+
+    this.priorityField = this.fields[1];
+    this.priorityField.disabled = true;
+
+    const subtargetsContainer = elem("div", { style: { gridColumnEnd: "span 6" } });
+
     let subTargetsExpanded = false;
     const btn = elem("button", {
       textContent: ">",
-      style: { marginLeft },
       onclick: (ev) => {
         subTargetsExpanded = !subTargetsExpanded;
 
@@ -384,42 +405,81 @@ class Target extends Item {
             state.insertValue(subStateKey, {});
           }
 
+          if (!this.subTargetInnerGrid) {
+            this.subTargetInnerGrid = new InnerGrid({
+              stateKey: subStateKey,
+              Item: Target,
+              marginLeft: addPx(marginLeft, 30),
+              sortFn: cmpKey("priority"),
+            });
+            subtargetsContainer.appendChild(this.subTargetInnerGrid.element);
+          }
+
           if (!this.newSubtarget) {
             this.newSubtarget = new NewTarget({
               stateKey: subStateKey,
               displayName: "Sub-Target",
               btnStyle: { marginLeft: addPx(marginLeft, 30) },
             }).element;
+            subtargetsContainer.appendChild(this.newSubtarget);
           }
-          this.element.after(this.newSubtarget);
 
-          if (!this.subTargetInnerGrid) {
-            this.subTargetInnerGrid = new InnerGrid({
-              stateKey: subStateKey,
-              Item: Target,
-              marginLeft: addPx(marginLeft, 30),
-            });
-          }
-          this.subTargetInnerGrid.insertAfter(this.element);
+          this.element.appendChild(subtargetsContainer);
         } else {
           ev.target.textContent = ">";
-          this.newSubtarget.remove();
-          this.subTargetInnerGrid.remove();
+          subtargetsContainer.remove();
         }
       },
     });
 
     this.element.children[0].prepend(btn);
+    let handleGrabbed = false;
+
+    const dragHandle = elem("span", {
+      textContent: ".. .. ..",
+      style: {
+        cursor: "grab",
+        fontSize: "12px",
+        letterSpacing: "3px",
+        fontWeight: "bold",
+        width: "10px",
+        lineHeight: "7px",
+        padding: "7px 5px",
+        marginLeft,
+      },
+    });
+    dragHandle.onmousedown = (ev) => {
+      handleGrabbed = true;
+      dragHandle.style.cursor = "grabbing";
+    };
+    const doneGrabbing = () => {
+      handleGrabbed = false;
+      dragHandle.style.cursor = "grab";
+    };
+    document.body.addEventListener("mouseup", doneGrabbing);
+    this.element.children[0].prepend(dragHandle);
+
+    this.element.draggable = true;
+    this.element.ondragstart = (ev) => {
+      // ev.target here is always this.element, gotta determine if the handle was clicked in
+      // onmousedown
+      if (handleGrabbed) {
+        this.onDragStart();
+        ev.target.after(visualizer);
+        dragging = ev.target;
+      }
+    };
+    this.element.ondragend = (ev) => {
+      doneGrabbing();
+      dragging = null;
+      this.onDragEnd?.();
+      visualizer.remove();
+    };
   }
 
-  get anchor() {
-    return this.newSubtarget || this.element;
-  }
-
-  remove() {
-    super.remove();
-    this.subTargetInnerGrid?.remove();
-    this.newSubtarget?.remove();
+  onOrderChanged(idx) {
+    this.priorityField.value = idx;
+    this.priorityField.onchange();
   }
 }
 
