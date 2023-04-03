@@ -110,14 +110,15 @@ export class DateTime {
   getDayOfMonth() {
     return this._jsDate.getDate();
   }
+
+  toString() {
+    return this._jsDate.toString();
+  }
 }
 
 export class WeeklyDateTime extends DateTime {
   resolve(dateRef) {
-    return dateRef
-      .getStartOfWeek()
-      .setTimeFrom(this)
-      .setDayOfWeek(this._jsDate.getDay());
+    return dateRef.getStartOfWeek().setTimeFrom(this).setDayOfWeek(this._jsDate.getDay());
   }
 
   isBefore(other) {

@@ -112,7 +112,24 @@ export class Target {
     );
   }
 
-  isBlockedAt(startDate) {
+  getFinishedAt() {
+    if (!this.hasSubtargets) {
+      return this.schedulerProperties.finishedAt;
+    }
+    let max = 0;
+    for (let subtarget of Object.values(this.subtargets)) {
+      const subFinishedAt = subtarget.getFinishedAt();
+      if (!subFinishedAt) {
+        return null;
+      }
+      if (subFinishedAt > max) {
+        max = subFinishedAt;
+      }
+    }
+    return max || null;
+  }
+
+  isBlockedAt(startDate, schedulerDebugger) {
     return Object.entries(this.blockers).some(([blockerKey, leadTime]) => {
       let blockerDate;
       if (blockerKey.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)) {
@@ -120,10 +137,21 @@ export class Target {
       } else {
         // TODO: store blocking target ids instead of names
         const blockingTarget = Object.values(targets).find((t) => t.name == blockerKey);
-        blockerDate = blockingTarget.schedulerProperties.finishedAt?.copy();
+        blockerDate = blockingTarget.getFinishedAt()?.copy();
       }
       const unblockedAt = blockerDate?.increment({ hours: leadTime });
-      return !unblockedAt || unblockedAt > startDate;
+      const blocked = !unblockedAt || unblockedAt > startDate;
+      if (blocked) {
+        schedulerDebugger.recordBlockedTarget({
+          startDate,
+          target: this,
+          blockerKey,
+          leadTime,
+          blockerDate,
+          unblockedAt,
+        });
+      }
+      return blocked;
     });
   }
 }
