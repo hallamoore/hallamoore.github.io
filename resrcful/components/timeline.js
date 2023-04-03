@@ -33,7 +33,13 @@ function cmpKey(key) {
 
 class TargetRow {
   constructor({ target, startDate, duration }) {
-    this.element = elem("tr", { style: { height: "100%" } });
+    this.element = elem("tr", {
+      style: {
+        // can't do 100% here, breaks on chrome. Chrome actually ignores this and calculates the row
+        // height based on content, but firefox uses it so it needs to be a reasonable number
+        height: "25px",
+      },
+    });
     this.subtargetControls = elem("td");
     this.header = elem("td");
     this.header.textContent = target.name;
@@ -97,7 +103,7 @@ class TargetRow {
 
     const cell = elem("td", {
       colSpan: boundingTimeRange.duration().days,
-      style: { height: "100%" },
+      style: { height: "inherit" }, // has to be inherit instead of 100% for chrome
     });
     const innerContainer = elem("div", {
       style: { display: "flex", height: "100%" },
