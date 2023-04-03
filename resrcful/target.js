@@ -45,6 +45,10 @@ export class Target {
     this.schedulerProperties = {
       finishedAt: null, // DateTime representing the end of the last assigned TimeRange when unscheduledPersonHoursRemaining reached 0.
     };
+
+    if (this._personHoursRemaining === undefined && !this.hasSubtargets) {
+      console.warn(`Target doesn't have any person hours remaining: ${this.name}`);
+    }
   }
 
   static deleteAll() {
@@ -114,7 +118,15 @@ export class Target {
 
   getFinishedAt() {
     if (!this.hasSubtargets) {
-      return this.schedulerProperties.finishedAt;
+      if (this.schedulerProperties.finishedAt) {
+        return this.schedulerProperties.finishedAt;
+      }
+      if (this.personHoursRemaining() === 0) {
+        // Target was finished before the scheduler start date, use an arbitrarily early date,
+        // but not new DateTime(0) because that's falsy and messes with things.
+        return new DateTime(1);
+      }
+      return null;
     }
     let max = 0;
     for (let subtarget of Object.values(this.subtargets)) {

@@ -31,12 +31,15 @@ class IterationDebugger {
     return this.activity[targetName];
   }
 
-  getBlockedSequence(targetName) {
+  getBlockedSequence(targetName, callers = []) {
     const target = this.flattenedUnfinishedTargets[targetName];
+    if (!target) {
+      console.log(targetName, callers);
+    }
     if (target.hasSubtargets) {
       let result = [];
       this.unfinishedSubtargets[targetName].forEach((subtarget) => {
-        result = result.concat(this.getBlockedSequence(subtarget.name));
+        result = result.concat(this.getBlockedSequence(subtarget.name, [...callers, targetName]));
       });
       return result;
     }
@@ -44,7 +47,7 @@ class IterationDebugger {
     if (type !== "blocked") {
       return [];
     }
-    return [blockerKey, ...this.getBlockedSequence(blockerKey)];
+    return [blockerKey, ...this.getBlockedSequence(blockerKey, [...callers, targetName])];
   }
 }
 
