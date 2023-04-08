@@ -27,32 +27,32 @@ function cmpPriority(a, b) {
   return parsePriority(a.priority) > parsePriority(b.priority) ? 1 : -1;
 }
 
+const gAppDeploymentId = "AKfycbx30xFRb7Yt7oj_9PVYKTu1_y5_qZf3y8qm4mzI4oygqdN7u35rrftig1F5ps7KKHYt";
+
 const remote = {
+  async _makeRequest(action, actionArgs) {
+    const resp = await fetch(`https://script.google.com/macros/s/${gAppDeploymentId}/exec`, {
+      method: "POST",
+      body: JSON.stringify({
+        session: getCookie("resrcfulSession"),
+        action,
+        actionArgs,
+      }),
+    });
+    const respJson = await resp.json();
+    if (respJson.error === "Unauthorized") {
+      deleteCookie("resrcfulSession");
+      return window.location.reload();
+    }
+    return respJson;
+  },
+
   async get() {
-    const params = new URLSearchParams();
-    const resp = await fetch(
-      "https://script.google.com/macros/s/AKfycbzbR2Yzje3mVygJnsMm0Mr8D2bSnYXGOwZFZnjhFfg8HcjMj8yBpFZq-S_giOTtg57M/exec",
-      {
-        method: "POST",
-        body: JSON.stringify({ session: getCookie("resrcfulSession"), action: "loadData" }),
-      }
-    );
-    return await resp.json();
+    return await this._makeRequest("loadData");
   },
 
   async set(data) {
-    const params = new URLSearchParams();
-    await fetch(
-      "https://script.google.com/macros/s/AKfycbzbR2Yzje3mVygJnsMm0Mr8D2bSnYXGOwZFZnjhFfg8HcjMj8yBpFZq-S_giOTtg57M/exec",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          session: getCookie("resrcfulSession"),
-          action: "saveData",
-          actionArgs: [JSON.stringify(data)],
-        }),
-      }
-    );
+    return await this._makeRequest("saveData", [JSON.stringify(data)]);
   },
 };
 
