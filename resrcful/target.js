@@ -17,7 +17,7 @@ export class Target {
       maxAssigneesAtOnce = Infinity, // number, how many employees can be assigned to a target during the same time range
     }
   ) {
-    if (targets.hasOwnProperty(id)) throw new Error(`Target with id '${id}' already exists`);
+    // if (targets.hasOwnProperty(id)) throw new Error(`Target with id '${id}' already exists`);
 
     targets[id] = this;
 
@@ -51,6 +51,30 @@ export class Target {
     }
   }
 
+  static fromSerialized(id, serialized) {
+    const deserialized = new Target(id, {
+      name: serialized.name,
+      canBeDoneBy: serialized.canBeDoneBy,
+      personHoursRemaining: serialized._personHoursRemaining,
+      blockers: serialized.blockers,
+      priority: serialized.priority,
+      maxAssigneesAtOnce: serialized.maxAssigneesAtOnce,
+    });
+    deserialized.subtargets = Object.entries(serialized.subtargets).reduce(
+      (obj, [subId, subtarget]) => {
+        deserialized.hasSubtargets = true;
+        obj[subId] = Target.fromSerialized(`${id}.${subId}`, subtarget);
+        return obj;
+      },
+      {}
+    );
+    deserialized._scheduledTimeRanges = TimeRangeCollection.fromSerialized(
+      serialized._scheduledTimeRanges
+    );
+    deserialized.schedulerProperties = serialized.schedulerProperties;
+    return deserialized;
+  }
+
   static deleteAll() {
     targets = {};
   }
@@ -78,6 +102,14 @@ export class Target {
       return result;
     }
     return this._scheduledTimeRanges;
+  }
+
+  totalScheduledRange() {
+    const scheduledTimeRanges = this.scheduledTimeRanges();
+    if (scheduledTimeRanges.length === 0) {
+      return null;
+    }
+    return new TimeRange(scheduledTimeRanges[0].start, scheduledTimeRanges.at(-1).end);
   }
 
   mergedScheduledTimeRanges(boundingTimeRange) {

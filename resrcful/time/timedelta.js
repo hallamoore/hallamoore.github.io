@@ -17,6 +17,11 @@ export class TimeDelta {
         1000 * (seconds + 60 * (minutes + 60 * (hours + 24 * (days + 7 * (weeks + 52 * years)))));
     }
   }
+
+  valueOf() {
+    return this.milliseconds;
+  }
+
   get seconds() {
     return this.milliseconds / 1000;
   }

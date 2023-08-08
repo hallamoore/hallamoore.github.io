@@ -4,7 +4,7 @@ import { TimeRange } from "../time/timerange.js";
 import { TimeRangeCollection } from "../time/timerange_collection.js";
 
 // TODO: move utils to util file instead of duplicating
-function elem(tag, args = {}) {
+export function elem(tag, args = {}) {
   const node = document.createElement(tag);
   Object.entries(args).forEach(([key, value]) => {
     if (key === "style") return;

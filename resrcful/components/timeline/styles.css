@@ -1,0 +1,113 @@
+.timeline {
+  position: relative;
+}
+
+.timeline .navigation {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.timeline .navigation .tab {
+  border-radius: 0;
+  padding: 10px;
+  border: none;
+  font-size: 18px;
+}
+
+.timeline .navigation .tab:disabled {
+  box-shadow: 0px -1px #1767ff inset;
+  color: #1767ff;
+}
+
+.timeline .calendar-cols-container {
+  width: 100%;
+  display: grid;
+  height: 100%;
+  position: absolute;
+  z-index: -1;
+  border: solid 1px lightgray;
+  border-left-width: 0; /* Left border already in place from .calendar-col */
+}
+
+.timeline .calendar-col {
+  height: 100%;
+  border-left: solid 1px lightgray;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.timeline .calendar-rows-container {
+  padding-top: 50px; /* Rows should start below column headers */
+}
+
+.timeline .target-row {
+  /* Use line-height instead of height so that any single-line divs have their text vertically
+  centered. */
+  line-height: 29px;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  box-shadow: 1px 1px lightgray inset;
+}
+
+.timeline .target-row-header {
+  flex-shrink: 0;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+}
+
+.timeline .title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-grow: 1;
+}
+
+.timeline .nav {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.timeline .back {
+  padding-right: 10px;
+}
+
+.timeline .forward {
+  padding-left: 10px;
+}
+
+.timeline .target-block {
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  min-width: 22px; /* space required to cleanly display the expandIcon */
+  flex-shrink: 0;
+  box-sizing: border-box;
+  box-shadow: black 1px 1px 2px -1px, 1px 0px rgba(0, 0, 0, 0.3) inset;
+  padding: 10px;
+}
+
+.timeline .date-range {
+  white-space: nowrap;
+  text-align: right;
+  margin-left: 10px;
+}
+
+.timeline .employees {
+  display: flex;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+.timeline .avatar {
+  border-radius: 15px;
+  font-size: 10px;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.5) inset;
+  flex-shrink: 0;
+  user-select: none;
+  aspect-ratio: 1;
+  margin-right: 5px;
+}

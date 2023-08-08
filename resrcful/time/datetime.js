@@ -5,6 +5,10 @@ export class DateTime {
     this._jsDate = timestamp === undefined ? new Date() : new Date(timestamp);
   }
 
+  static fromSerialized(serialized) {
+    return new DateTime(serialized._jsDate);
+  }
+
   static fromDateStr(dateStr) {
     // dateStr - YYYY-MM-DD
     // Returns midnight in the local timezone, not utc.
@@ -118,7 +122,10 @@ export class DateTime {
 
 export class WeeklyDateTime extends DateTime {
   resolve(dateRef) {
-    return dateRef.getStartOfWeek().setTimeFrom(this).setDayOfWeek(this._jsDate.getDay());
+    return dateRef
+      .getStartOfWeek()
+      .setTimeFrom(this)
+      .setDayOfWeek(this._jsDate.getDay());
   }
 
   isBefore(other) {

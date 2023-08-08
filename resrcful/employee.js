@@ -55,6 +55,18 @@ export class Employee {
     };
   }
 
+  static fromSerialized(serialized) {
+    const deserialized = new Employee({
+      name: serialized.name,
+      hoursPerDay: [],
+      hoursExceptions: {},
+    });
+    deserialized.scheduledTimeRanges = TimeRangeCollection.fromSerialized(
+      serialized.scheduledTimeRanges
+    );
+    return deserialized;
+  }
+
   getUnscheduledRanges(boundingTimeRange) {
     const { additiveExceptions, subtractiveExceptions } = this.workingHoursExceptions;
     const alreadyScheduled = this.scheduledTimeRanges.intersection(boundingTimeRange);
@@ -64,5 +76,26 @@ export class Employee {
       .union(additiveExceptions.intersection(boundingTimeRange))
       .subtract(subtractiveExceptions.intersection(boundingTimeRange))
       .subtract(alreadyScheduled);
+  }
+
+  compUgh(last, next) {
+    return last.targetHierarchy.join("/") === next.targetHierarchy.join("/");
+  }
+
+  getMergedScheduledTimeRanges() {
+    if (!this._mergedScheduledTimeRanges) {
+      this._mergedScheduledTimeRanges = this.scheduledTimeRanges.merge({
+        compFn: this.compUgh,
+        keepValues: ["targetHierarchy"],
+        ignoreTimeGaps: true,
+      });
+    }
+    return this._mergedScheduledTimeRanges;
+  }
+
+  getBoundedMergedScheduledTimeRanges(boundingTimeRange) {
+    return this.getMergedScheduledTimeRanges().intersection2(boundingTimeRange, {
+      keepValues: ["targetHierarchy"],
+    });
   }
 }

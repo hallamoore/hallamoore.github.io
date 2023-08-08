@@ -1,7 +1,9 @@
+import { TimeRange } from "./timerange.js";
+
 export class TimeRangeCollection extends Array {
-  // constructor(...args) {
-  //   super(...args)
-  // }
+  static fromSerialized(serialized) {
+    return new TimeRangeCollection(...serialized.map(TimeRange.fromSerialized));
+  }
 
   union(other) {
     let results = new TimeRangeCollection();
@@ -50,22 +52,64 @@ export class TimeRangeCollection extends Array {
     return results;
   }
 
-  intersection(otherTimeRange, { keepValues = [] } = {}) {
+  intersection2(otherTimeRange, { keepValues = [] } = {}) {
     const results = new TimeRangeCollection();
+    let fullFirstRange, fullLastRange;
     for (let thisTimeRange of this) {
       const next = thisTimeRange.intersection(otherTimeRange, { keepValues });
       if (!next && results.length > 0) {
         break;
       }
       if (next) {
+        if (!fullFirstRange) {
+          fullFirstRange = thisTimeRange;
+        }
+        fullLastRange = thisTimeRange;
         results.push(next);
       }
     }
-    return results;
+    return { results, fullFirstRange, fullLastRange };
+  }
+
+  intersection(otherTimeRange, options) {
+    return this.intersection2(otherTimeRange, options).results;
   }
 
   concat(other) {
     return new this.constructor(...this, ...other);
+  }
+
+  merge({ compFn, keepValues, ignoreTimeGaps = false }) {
+    // Merges back-to-back ranges that have the same output from the
+    // given comparison function (`compFn`)
+    let results = new TimeRangeCollection();
+    if (this.length === 0) {
+      return results;
+    }
+    let last = this[0];
+    this.forEach((range) => {
+      if (compFn(last, range)) {
+        let union = [];
+        if (ignoreTimeGaps) {
+          union = [new TimeRange(last.start, range.end)];
+        } else {
+          union = range.union(last);
+        }
+        union = union.map((x) => {
+          keepValues.forEach((key) => {
+            x[key] = range[key];
+          });
+          return x;
+        });
+        last = union.pop();
+        results = results.concat(union);
+      } else {
+        results.push(last);
+        last = range;
+      }
+    });
+    results.push(last);
+    return results;
   }
 }
 

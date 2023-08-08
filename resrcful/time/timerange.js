@@ -1,9 +1,18 @@
-import { WeeklyDateTime } from "./datetime.js";
+import { DateTime, WeeklyDateTime } from "./datetime.js";
 
 export class TimeRange {
   constructor(start, end) {
     this.start = start.copy();
     this.end = end.copy();
+  }
+
+  static fromSerialized({ start, end, ...rest }) {
+    const deserialized = new TimeRange(
+      DateTime.fromSerialized(start),
+      DateTime.fromSerialized(end)
+    );
+    Object.assign(deserialized, rest);
+    return deserialized;
   }
 
   duration() {

@@ -15,6 +15,9 @@ class MyHandler(SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     PORT = 8001
-    with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
+    with socketserver.TCPServer(("", PORT), MyHandler, bind_and_activate=False) as server:
+        server.allow_reuse_address = True  # Needs to happen before bind/activate
+        server.server_bind()
+        server.server_activate()
         print("serving at port", PORT)
-        httpd.serve_forever()
+        server.serve_forever()

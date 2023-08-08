@@ -2,6 +2,7 @@
 import { getCookie } from "../cookies.js";
 import { Redirect } from "../router.js";
 import Timeline from "../components/timeline.js";
+import TimelineV2 from "../components/timeline/index.js";
 import { schedule } from "../scheduler.js";
 
 function elem(tag, args = {}) {
@@ -576,6 +577,7 @@ class TimelineWrapper {
     const calculate = elem("button", { textContent: "Calculate", id: "calculate" });
     calculate.onclick = () => {
       if (this.timeline) this.timeline.remove();
+      if (this.timelineV2) this.timelineV2.remove();
       this.element.appendChild(this.loading);
       const employees = Object.values(state.data.employees).map((employee) => {
         return {
@@ -589,6 +591,8 @@ class TimelineWrapper {
       this.loading.remove();
       this.timeline = Timeline.build(results);
       this.element.appendChild(this.timeline);
+      this.timelineV2 = new TimelineV2({ schedule: results });
+      this.element.appendChild(this.timelineV2);
     };
     this.element.appendChild(calculate);
   }
