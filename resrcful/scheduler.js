@@ -120,10 +120,17 @@ class SchedulerDebugger {
   }
 }
 
+const sum = (items) => items.reduce((result, next) => result + next, 0);
+
+const targetKey = (target) => `target:${target.name}`;
+const employeeKey = (employee) => `employee:${employee.name}`;
+
 function getPrioritizedUnfinishedTargets(targets) {
   // OPT: add option to specify if we know the array is already sorted
   return targets
-    .filter((target) => target.unscheduledPersonHoursRemaining() > 0)
+    .filter((target) => {
+      return !target.getFinishedAt();
+    })
     .sort((a, b) => (a.priority > b.priority ? 1 : -1));
 }
 
@@ -132,47 +139,66 @@ function assignTimeRanges({
   parentHierarchy = [],
   boundingTimeRange,
   schedulerDebugger,
+  assignedTimeRanges,
 }) {
   schedulerDebugger.recordUnfinishedTargets({
     boundingTimeRange,
     targets: prioritizedUnfinishedTargets,
   });
 
-  let assignedTimeRanges = [];
+  let madeProgress = false;
+
   for (let target of prioritizedUnfinishedTargets) {
     if (target.isBlockedAt(boundingTimeRange.start, schedulerDebugger)) continue;
 
     if (target.hasSubtargets) {
       const subtargets = getPrioritizedUnfinishedTargets(Object.values(target.subtargets));
       schedulerDebugger.setUnfinishedSubtargets({ boundingTimeRange, target, subtargets });
-      const subDebugInfo = {};
-      const subAssignedTimeRanges = assignTimeRanges({
+      const subMadeProgress = assignTimeRanges({
         prioritizedUnfinishedTargets: subtargets,
         boundingTimeRange,
         parentHierarchy: parentHierarchy.concat(target.name),
         schedulerDebugger,
+        assignedTimeRanges,
       });
-      assignedTimeRanges = assignedTimeRanges.concat(subAssignedTimeRanges);
+      if (subMadeProgress) {
+        madeProgress = true;
+      }
       continue;
     }
 
     let numEmployeesAssignedToTarget = 0;
     for (let employeeName of target.canBeDoneBy) {
       const employee = employeesByName[employeeName];
-      const availableRanges = employee.getUnscheduledRanges(boundingTimeRange);
+      const availableRanges = employee.getUnscheduledRanges(boundingTimeRange).filter(
+        (range) =>
+          // TODO: optimize
+          !assignedTimeRanges[employeeKey(employee)]?.ranges.some(
+            (r) => r.start._jsDate.getTime() == range.start._jsDate.getTime()
+          )
+      );
       if (availableRanges.length === 0) continue;
 
       let finishedAt;
       for (let range of availableRanges) {
         range.targetHierarchy = parentHierarchy.concat(target.name);
         range.employeeName = employeeName;
-        assignedTimeRanges.push(range);
-        target._scheduledTimeRanges.push(range);
-        employee.scheduledTimeRanges.push(range);
+        if (!assignedTimeRanges[employeeKey(employee)]) {
+          assignedTimeRanges[employeeKey(employee)] = { employee, ranges: [] };
+        }
+        if (!assignedTimeRanges[targetKey(target)]) {
+          assignedTimeRanges[targetKey(target)] = { target, ranges: [] };
+        }
+        assignedTimeRanges[employeeKey(employee)].ranges.push(range);
+        assignedTimeRanges[targetKey(target)].ranges.push(range);
         finishedAt = range.end;
+        madeProgress = true;
       }
 
-      if (target.unscheduledPersonHoursRemaining() <= 0) {
+      const assignedHours = sum(
+        assignedTimeRanges[targetKey(target)].ranges.map((range) => range.duration().hours)
+      );
+      if (target.unscheduledPersonHoursRemaining() - assignedHours <= 0) {
         target.schedulerProperties.finishedAt = finishedAt;
         schedulerDebugger.targetFinishedAt({ boundingTimeRange, target, finishedAt });
         break;
@@ -200,7 +226,7 @@ function assignTimeRanges({
     }
   }
 
-  return assignedTimeRanges;
+  return madeProgress;
 }
 
 const employeesByName = {};
@@ -227,7 +253,7 @@ export function schedule({
 
   schedulerDebugger.setTargets(targets);
 
-  let assignedTimeRanges = [];
+  let assignedTimeRanges = {};
   let consecutiveRoundsWithoutProgress = 0;
   let prioritizedUnfinishedTargets = getPrioritizedUnfinishedTargets(targets);
   const boundingTimeRange = new TimeRange(
@@ -236,26 +262,38 @@ export function schedule({
   );
 
   while (consecutiveRoundsWithoutProgress < 100) {
-    const currAssignedTimeRanges = assignTimeRanges({
+    const madeProgress = assignTimeRanges({
       prioritizedUnfinishedTargets,
       boundingTimeRange,
       schedulerDebugger,
+      assignedTimeRanges,
     });
-    assignedTimeRanges = assignedTimeRanges.concat(currAssignedTimeRanges);
 
     prioritizedUnfinishedTargets = getPrioritizedUnfinishedTargets(prioritizedUnfinishedTargets);
     if (prioritizedUnfinishedTargets.length === 0) {
       break;
     }
 
-    if (currAssignedTimeRanges.length == 0) {
-      consecutiveRoundsWithoutProgress++;
-    } else {
+    if (madeProgress) {
       consecutiveRoundsWithoutProgress = 0;
+    } else {
+      consecutiveRoundsWithoutProgress++;
     }
 
     boundingTimeRange.moveBy(iterationIncrement);
   }
+
+  Object.values(assignedTimeRanges).forEach(({ employee, target, ranges }) => {
+    ranges.forEach((range) => {
+      if (employee) {
+        employee.scheduledTimeRanges.push(range);
+      }
+      if (target) {
+        target._scheduledTimeRanges.push(range);
+      }
+    });
+  });
+
   if (consecutiveRoundsWithoutProgress != 0) {
     console.warn(
       `Didn't finish scheduling, logic didn't make any progress for ${consecutiveRoundsWithoutProgress} rounds`
