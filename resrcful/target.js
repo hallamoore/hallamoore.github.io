@@ -24,7 +24,7 @@ export class Target {
     this.name = name;
     this.priority =
       typeof priority === "string" ? (priority === "" ? Infinity : parseFloat(priority)) : priority;
-    this.canBeDoneBy = canBeDoneBy;
+    this.canBeDoneBy = canBeDoneBy || [];
     this._personHoursRemaining =
       typeof personHoursRemaining === "string"
         ? parseFloat(personHoursRemaining)
@@ -36,9 +36,11 @@ export class Target {
       : {};
     this.maxAssigneesAtOnce = maxAssigneesAtOnce;
     this.hasSubtargets = false;
-    this.subtargets = Object.entries(subtargets).reduce((obj, [subId, subtarget]) => {
+    this.subtargets = Object.entries(subtargets).reduce((obj, [subId, _subtarget]) => {
       this.hasSubtargets = true;
-      obj[subId] = new Target(`${id}.${subId}`, subtarget);
+      const subtarget = new Target(`${id}.${subId}`, _subtarget);
+      subtarget.parent = this;
+      obj[subId] = subtarget;
       return obj;
     }, {});
     this._scheduledTimeRanges = new TimeRangeCollection();
@@ -174,7 +176,7 @@ export class Target {
   }
 
   isBlockedAt(startDate, schedulerDebugger) {
-    return Object.entries(this.blockers).some(([blockerKey, leadTime]) => {
+    const thisIsBlocked = Object.entries(this.blockers).some(([blockerKey, leadTime]) => {
       let blockerDate;
       if (blockerKey.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)) {
         blockerDate = DateTime.fromDateStr(blockerKey);
@@ -197,5 +199,8 @@ export class Target {
       }
       return blocked;
     });
+    if (thisIsBlocked) return true;
+
+    return this.parent?.isBlockedAt(startDate, schedulerDebugger);
   }
 }

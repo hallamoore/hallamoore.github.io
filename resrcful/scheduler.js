@@ -5,6 +5,8 @@ import { TimeRangeCollection, WeeklyTimeRangeCollection } from "./time/timerange
 import { Target } from "./target.js";
 import { Employee } from "./employee.js";
 
+const max = (...items) => items.reduce((acc, item) => (acc < item ? item : acc), -Infinity);
+
 class IterationDebugger {
   constructor(boundingTimeRange) {
     this.boundingTimeRange = boundingTimeRange;
@@ -122,16 +124,40 @@ class SchedulerDebugger {
 
 const sum = (items) => items.reduce((result, next) => result + next, 0);
 
-const targetKey = (target) => `target:${target.name}`;
+const getTargetKey = (target) => `target:${target.name}`;
 const employeeKey = (employee) => `employee:${employee.name}`;
 
 function getPrioritizedUnfinishedTargets(targets) {
   // OPT: add option to specify if we know the array is already sorted
-  return targets
+  targets = targets
     .filter((target) => {
       return !target.getFinishedAt();
     })
     .sort((a, b) => (a.priority > b.priority ? 1 : -1));
+
+  let index = 0;
+  while (index < targets.length) {
+    const target = targets[index];
+    if (target.hasSubtargets) {
+      const subtargets = getPrioritizedUnfinishedTargets(Object.values(target.subtargets));
+      targets.splice(index + 1, 0, ...subtargets);
+    }
+    index++;
+  }
+
+  return targets;
+}
+
+function removeFinishedTargets(targets, assignedTimeRanges) {
+  return targets.filter((target) => {
+    let assignedHours = 0;
+    if (assignedTimeRanges[getTargetKey(target)]) {
+      assignedHours = sum(
+        assignedTimeRanges[getTargetKey(target)].ranges.map((range) => range.duration().hours)
+      );
+    }
+    return (target._personHoursRemaining || 0) - assignedHours > 0;
+  });
 }
 
 function assignTimeRanges({
@@ -151,23 +177,8 @@ function assignTimeRanges({
   for (let target of prioritizedUnfinishedTargets) {
     if (target.isBlockedAt(boundingTimeRange.start, schedulerDebugger)) continue;
 
-    if (target.hasSubtargets) {
-      const subtargets = getPrioritizedUnfinishedTargets(Object.values(target.subtargets));
-      schedulerDebugger.setUnfinishedSubtargets({ boundingTimeRange, target, subtargets });
-      const subMadeProgress = assignTimeRanges({
-        prioritizedUnfinishedTargets: subtargets,
-        boundingTimeRange,
-        parentHierarchy: parentHierarchy.concat(target.name),
-        schedulerDebugger,
-        assignedTimeRanges,
-      });
-      if (subMadeProgress) {
-        madeProgress = true;
-      }
-      continue;
-    }
+    const targetKey = getTargetKey(target);
 
-    let numEmployeesAssignedToTarget = 0;
     for (let employeeName of target.canBeDoneBy) {
       const employee = employeesByName[employeeName];
       const availableRanges = employee.getUnscheduledRanges(boundingTimeRange).filter(
@@ -186,43 +197,37 @@ function assignTimeRanges({
         if (!assignedTimeRanges[employeeKey(employee)]) {
           assignedTimeRanges[employeeKey(employee)] = { employee, ranges: [] };
         }
-        if (!assignedTimeRanges[targetKey(target)]) {
-          assignedTimeRanges[targetKey(target)] = { target, ranges: [] };
+        if (!assignedTimeRanges[targetKey]) {
+          assignedTimeRanges[targetKey] = { target, ranges: [] };
         }
+
+        if (target.maxAssigneesAtOnce) {
+          const concurrentCount = assignedTimeRanges[targetKey].ranges.filter((r) => {
+            return r.start._jsDate.getTime() === range.start._jsDate.getTime();
+          }).length;
+
+          if (concurrentCount >= target.maxAssigneesAtOnce) {
+            break;
+          }
+        }
+
         assignedTimeRanges[employeeKey(employee)].ranges.push(range);
-        assignedTimeRanges[targetKey(target)].ranges.push(range);
+        assignedTimeRanges[targetKey].ranges.push(range);
         finishedAt = range.end;
         madeProgress = true;
       }
 
       const assignedHours = sum(
-        assignedTimeRanges[targetKey(target)].ranges.map((range) => range.duration().hours)
+        assignedTimeRanges[targetKey].ranges.map((range) => range.duration().hours)
       );
-      if (target.unscheduledPersonHoursRemaining() - assignedHours <= 0) {
-        target.schedulerProperties.finishedAt = finishedAt;
+      if ((target._personHoursRemaining || 0) - assignedHours <= 0) {
+        // target.schedulerProperties.finishedAt = finishedAt;
+        target.schedulerProperties.finishedAt = max(
+          ...assignedTimeRanges[targetKey].ranges.map((r) => r.end)
+        );
         schedulerDebugger.targetFinishedAt({ boundingTimeRange, target, finishedAt });
         break;
       }
-
-      numEmployeesAssignedToTarget++;
-      if (numEmployeesAssignedToTarget >= target.maxAssigneesAtOnce) {
-        schedulerDebugger.maxAssigneesReached({
-          boundingTimeRange,
-          target,
-          numEmployeesAssignedToTarget,
-        });
-        break;
-      }
-    }
-
-    if (numEmployeesAssignedToTarget.length > 0) {
-      schedulerDebugger.targetProgressed({
-        boundingTimeRange,
-        target,
-        numEmployeesAssignedToTarget,
-      });
-    } else {
-      schedulerDebugger.noEmployeesAvailable({ boundingTimeRange, target });
     }
   }
 
@@ -269,7 +274,10 @@ export function schedule({
       assignedTimeRanges,
     });
 
-    prioritizedUnfinishedTargets = getPrioritizedUnfinishedTargets(prioritizedUnfinishedTargets);
+    prioritizedUnfinishedTargets = removeFinishedTargets(
+      prioritizedUnfinishedTargets,
+      assignedTimeRanges
+    );
     if (prioritizedUnfinishedTargets.length === 0) {
       break;
     }
