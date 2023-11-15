@@ -212,6 +212,8 @@ export function schedule({
   startDate = new DateTime().toStartOfDay(),
   iterationIncrement = new TimeDelta({ hours: 1 }),
 }) {
+  startDate = new DateTime(startDate);
+
   const schedulerDebugger = new SchedulerDebugger();
 
   employees = employees.map((emp) => {

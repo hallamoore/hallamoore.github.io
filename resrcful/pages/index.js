@@ -4,6 +4,13 @@ import { Redirect } from "../router.js";
 import Timeline from "../components/timeline.js";
 import TimelineV2 from "../components/timeline/index.js";
 import { schedule } from "../scheduler.js";
+import test from "../test/test_scheduler.js";
+
+const DEBUG = Boolean(new URLSearchParams(location.search).get("debug"));
+
+if (DEBUG) {
+  test();
+}
 
 function elem(tag, args = {}) {
   const node = document.createElement(tag);
@@ -66,8 +73,6 @@ const local = {
     localStorage.setItem("resrcful", JSON.stringify(data));
   },
 };
-
-const DEBUG = false;
 
 class IDKState {
   constructor() {
