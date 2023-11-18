@@ -174,32 +174,45 @@ function assignTimeRanges({
 
   let madeProgress = false;
 
-  for (let target of prioritizedUnfinishedTargets) {
-    if (target.isBlockedAt(boundingTimeRange.start, schedulerDebugger)) continue;
-
-    const targetKey = getTargetKey(target);
-
-    for (let employeeName of target.canBeDoneBy) {
-      const employee = employeesByName[employeeName];
-      const availableRanges = employee.getUnscheduledRanges(boundingTimeRange).filter(
+  // only ranges for this iteration, not the total like `assignedTimeRanges` has
+  const unassignedRangesByEmployee = {};
+  Object.values(employeesByName).forEach((employee) => {
+    unassignedRangesByEmployee[employee.name] = employee
+      .getUnscheduledRanges(boundingTimeRange)
+      .filter(
         (range) =>
           // TODO: optimize
           !assignedTimeRanges[employeeKey(employee)]?.ranges.some(
             (r) => r.start._jsDate.getTime() == range.start._jsDate.getTime()
           )
       );
+  });
+
+  for (let target of prioritizedUnfinishedTargets) {
+    const targetKey = getTargetKey(target);
+
+    if (!assignedTimeRanges[targetKey]) {
+      assignedTimeRanges[targetKey] = { target, ranges: [] };
+    }
+
+    if (target.isBlockedAt(boundingTimeRange.start, schedulerDebugger)) continue;
+
+    for (let employeeName of target.canBeDoneBy) {
+      const employee = employeesByName[employeeName];
+
+      if (!assignedTimeRanges[employeeKey(employee)]) {
+        assignedTimeRanges[employeeKey(employee)] = { employee, ranges: [] };
+      }
+
+      const availableRanges = unassignedRangesByEmployee[employeeName];
       if (availableRanges.length === 0) continue;
 
       let finishedAt;
+      let numAssigned = 0;
       for (let range of availableRanges) {
         range.targetHierarchy = parentHierarchy.concat(target.name);
+        range.target = target;
         range.employeeName = employeeName;
-        if (!assignedTimeRanges[employeeKey(employee)]) {
-          assignedTimeRanges[employeeKey(employee)] = { employee, ranges: [] };
-        }
-        if (!assignedTimeRanges[targetKey]) {
-          assignedTimeRanges[targetKey] = { target, ranges: [] };
-        }
 
         if (target.maxAssigneesAtOnce) {
           const concurrentCount = assignedTimeRanges[targetKey].ranges.filter((r) => {
@@ -213,9 +226,12 @@ function assignTimeRanges({
 
         assignedTimeRanges[employeeKey(employee)].ranges.push(range);
         assignedTimeRanges[targetKey].ranges.push(range);
+        numAssigned++;
         finishedAt = range.end;
         madeProgress = true;
       }
+
+      availableRanges.splice(0, numAssigned);
 
       const assignedHours = sum(
         assignedTimeRanges[targetKey].ranges.map((range) => range.duration().hours)
