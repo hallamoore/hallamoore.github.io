@@ -27,7 +27,7 @@
 
       async function loadSubAppIfApplicable() {
         const { origin, pathname } = window.location;
-        for (let prefix of ["/invoicing", "/resrcful"]) {
+        for (let prefix of ["/invoicing", "/resrcful", "/food"]) {
           if (pathname.startsWith(prefix)) {
             const url = `${origin}${prefix}/index.html?path=${pathname.split(`${prefix}/`)[1]}`;
             const resp = await fetch(url);

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Food</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script type="text/javascript">
+      function onContentLoaded(callback) {
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", () => callback());
+        } else {
+          callback();
+        }
+      }
+
+      const interpolateContext = (root = document.body) => {
+        if (root instanceof TemplateContextElement) {
+          root.interpolate?.();
+        }
+
+        for (let child of root.childNodes) {
+          interpolateContext(child);
+        }
+
+        if (root instanceof TemplateContextElement) {
+          root.flatten(); // can't flatten until after all children have been interpolated
+        }
+      };
+
+      // connectedCallback on HTMLElement is triggered when parent content is available, but before
+      // child content is. Use this instead so that all child content is available before
+      // interpolating.
+      onContentLoaded(interpolateContext);
+
+      class Context {
+        constructor(initialValue) {
+          this._value = initialValue;
+          this.subContexts = {};
+          this.observers = [];
+        }
+
+        get value() {
+          return this._value;
+        }
+
+        set value(newValue) {
+          this._value = newValue;
+          this.observers.forEach((observer) => observer());
+        }
+
+        get(path) {
+          const key = path.shift();
+          if (!this.subContexts[key]) {
+            this.subContexts[key] = new Context(this._value?.[key]);
+          }
+          if (path.length === 0) {
+            return this.subContexts[key];
+          }
+          return this.subContexts[key].get(path);
+        }
+
+        observe(observer) {
+          this.observers.push(observer);
+        }
+
+        unobserve(observer) {
+          const index = this.observers.findIndex(observer);
+          if (index !== -1) {
+            this.observers.splice(index, 1);
+          }
+        }
+      }
+
+      window.context = new Context({
+        test: "hello world",
+        items: [{ name: "a" }, { name: "b" }, { name: "c" }],
+        users: [{ name: "a" }, { name: "b" }, { name: "c" }],
+      });
+
+      /*
+        <FetchUsers>
+          <Switch key="fetchUsersState">
+            <Case value="loading">
+              Loading...
+            </Case>
+            <Case value="success">
+              <use-template with-id="users"></use-template>
+            </Case>
+          </Switch>
+        </FetchUsers>
+
+        <ContextProvider key='abc'>
+        <template id='users'>
+          <tmpl-each key='users'>
+            <tmpl-value key='.name'>John</tmpl-value>
+            <tmpl-value key='.blurb'>None</tmpl-value>
+          </tmpl-each>
+        </template>
+      */
+
+      class TemplateContextElement extends HTMLElement {
+        connectedCallback() {
+          this.loaded = false;
+          onContentLoaded(() => this.contentLoaded());
+        }
+
+        contentLoaded() {
+          if (this.loaded) return;
+          const clonedChildren = [...this.childNodes].map((child) => child.cloneNode(true));
+          this._originalTemplate = new DocumentFragment();
+          this._originalTemplate.replaceChildren(...clonedChildren);
+          this.loaded = true;
+        }
+
+        cloneTemplate() {
+          return this._originalTemplate.cloneNode(true);
+        }
+
+        interpolate() {
+          this.contentLoaded();
+          let path = this.attributes.key.value;
+          if (path.startsWith(".")) {
+            if (!(this.parentElement instanceof TemplateContextElement)) {
+              throw new Error("Can't use a relative key unless parent is a TemplateContextElement");
+            }
+            this.context = this.parentElement.context;
+            path = path.substring(1);
+          } else {
+            this.context = window.context;
+          }
+          this.context = this.context.get(path.split("."));
+        }
+
+        flatten() {
+          const fragment = new DocumentFragment();
+          fragment.replaceChildren(...this.childNodes);
+          this.replaceWith(fragment);
+        }
+      }
+
+      class TemplateValueElement extends TemplateContextElement {
+        interpolate() {
+          super.interpolate();
+
+          if (this.context.value !== undefined) {
+            this.innerHTML = this.context.value;
+          }
+        }
+      }
+
+      class TemplateEachElement extends TemplateContextElement {
+        buildItem(idx) {
+          const wrapper = document.createElement("tmpl-context");
+          wrapper.setAttribute("key", `${this.attributes.key.value}.${idx}`);
+
+          wrapper.replaceChildren(this.cloneTemplate());
+          return wrapper;
+        }
+
+        interpolate() {
+          super.interpolate();
+
+          this.itemWrappers = [];
+          const fragment = new DocumentFragment();
+
+          this.context.value.forEach((item, idx) => {
+            const wrapper = this.buildItem(idx);
+            fragment.appendChild(wrapper);
+            this.itemWrappers.push(wrapper);
+          });
+
+          this.replaceChildren(fragment);
+        }
+
+        update() {
+          const updateBy = this.attributes["update-by"].value?.split(",");
+          const nextItemWrappers = [];
+          this.context.value.forEach((item, idx) => {
+            if (updateBy) {
+              const existing = this.itemWrappers.find((itemWrapper) => {
+                return updateBy.every((path) => {
+                  return itemWrapper.context.get(path).value === this.context.get(path).value;
+                });
+              });
+              if (existing) {
+                nextItemWrappers.push(existing);
+                return;
+              }
+            }
+            nextItemWrappers.push(this.buildItem(idx));
+          });
+        }
+      }
+
+      class UseTemplateElement extends TemplateContextElement {
+        interpolate() {
+          this.replaceChildren(
+            document.getElementById(this.attributes["with-id"].value).content.cloneNode(true)
+          );
+        }
+      }
+
+      customElements.define("tmpl-each", TemplateEachElement);
+      customElements.define("tmpl-value", TemplateValueElement);
+      customElements.define("tmpl-context", TemplateContextElement);
+      customElements.define("use-template", UseTemplateElement);
+    </script>
+  </head>
+  <body>
+    hello
+    <tmpl-value key="test" default="def"></tmpl-value>
+    <tmpl-each key="items">
+      <tmpl-value key=".name"></tmpl-value>
+    </tmpl-each>
+    <use-template with-id="users"></use-template>
+
+    <template id="users">
+      <tmpl-each key="users" update-by=".name">
+        <tmpl-value key=".name">John</tmpl-value>
+        <tmpl-value key=".blurb">None</tmpl-value>
+      </tmpl-each>
+    </template>
+  </body>
+</html>
