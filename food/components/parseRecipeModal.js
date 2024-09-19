@@ -13,8 +13,8 @@ export default class ParseRecipeModal extends ModalForm {
         onParsed({
           ...parsed,
           ingredients: ingredients.join("\n"),
-          directions: directions.join("\n\n"),
-          notes: notes.join("\n\n"),
+          directions: directions,
+          notes: notes,
         });
       },
     });

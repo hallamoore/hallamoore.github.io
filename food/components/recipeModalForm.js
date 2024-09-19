@@ -1,10 +1,11 @@
 import { Input, ModalForm, Textarea } from "../../elements/index.js";
 
 export default class RecipeModalForm extends ModalForm {
-  constructor() {
+  constructor({ foodApi }) {
     super({
       title: "New recipe",
       contents: [
+        new Input({ label: "Title", attrs: { name: "title" } }),
         new Input({ label: "Original Source", attrs: { name: "originalSource" } }),
         new Input({ label: "Prep Time", attrs: { name: "prepTime" } }),
         new Input({ label: "Cook Time", attrs: { name: "cookTime" } }),
@@ -15,8 +16,8 @@ export default class RecipeModalForm extends ModalForm {
         new Textarea({ attrs: { name: "notes" } }),
       ],
       submitButtonText: "Create",
-      onSubmit: () => {
-        // TODO: create recipe on backend
+      onSubmit: async (values) => {
+        await foodApi.createRecipe(values);
       },
     });
   }

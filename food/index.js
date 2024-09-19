@@ -10,7 +10,7 @@ import RecipesPage from "./pages/recipesPage.js";
 const sessionCookieName = "foodSession";
 
 const foodApi = buildApi({
-  gAppDeploymentId: "AKfycbyPkou8FQ1NT6n7Huu5c8oxRvoPb4tGlufgQw_6Z8ha9u-AmFU2e774Kn6VI3WrrBfU1Q",
+  gAppDeploymentId: "AKfycbyD5w2aS-1ZWkywcLI30uY5q0-g841y57ZEWQlM6Yrhplj0iDj0vDmCKDyFdQ0V7k7AHQ",
   dev: true,
   sessionCookieName,
 });
