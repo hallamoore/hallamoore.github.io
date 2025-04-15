@@ -9,7 +9,7 @@ export default function buildApi({ gAppDeploymentId, sessionCookieName }) {
     {},
     {
       get(target, prop, receiver) {
-        return async (actionArgs) => {
+        return async (actionArgs = {}) => {
           const resp = await fetch(url, {
             method: "POST",
             body: JSON.stringify({
