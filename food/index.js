@@ -11,8 +11,8 @@ const sessionCookieName = "foodSession";
 
 const foodApi = buildApi({
   gAppDeploymentId: "AKfycbx9H-h3G6a11-aoPjlNTa-alpVmG9SPuGlHeLTARDuQSBDmKkqOpfSg2ZoxVaULtxQdXA",
-  dev: true,
   sessionCookieName,
+  cacheName: "foodApi", // TODO: remove when done developing, or implement way to refresh stale data
 });
 
 const router = new Router({
