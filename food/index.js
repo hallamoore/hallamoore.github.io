@@ -2,7 +2,7 @@ import NotFound from "../elements/notFound.js";
 import Login from "../elements/login.js";
 import Router from "../router/index.js";
 
-import RecipeView from "./components/recipeView.js";
+import RecipeView from "./components/recipeView/index.js";
 import runTests from "./tests/index.js";
 import buildApi from "../api/index.js";
 import RecipesPage from "./pages/recipesPage.js";
@@ -10,7 +10,7 @@ import RecipesPage from "./pages/recipesPage.js";
 const sessionCookieName = "foodSession";
 
 const foodApi = buildApi({
-  gAppDeploymentId: "AKfycbyD5w2aS-1ZWkywcLI30uY5q0-g841y57ZEWQlM6Yrhplj0iDj0vDmCKDyFdQ0V7k7AHQ",
+  gAppDeploymentId: "AKfycbx9H-h3G6a11-aoPjlNTa-alpVmG9SPuGlHeLTARDuQSBDmKkqOpfSg2ZoxVaULtxQdXA",
   dev: true,
   sessionCookieName,
 });
@@ -24,7 +24,8 @@ const router = new Router({
 });
 
 router.addRoute("/", RecipesPage.with({ foodApi }));
-router.addRoute("/{recipeId}", RecipeView);
+router.addRoute("/logout", () => foodApi.logout());
+router.addRoute("/{recipeId}", RecipeView.with({ foodApi }));
 router.addRoute("/test", () => {
   runTests();
   return null;

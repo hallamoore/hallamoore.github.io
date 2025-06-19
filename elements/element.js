@@ -23,7 +23,7 @@ export default class Element {
     const cls = this;
     return {
       [cls.name]: function (laterArgs) {
-        return new cls({ ...initialArgs, laterArgs });
+        return new cls({ ...initialArgs, ...laterArgs });
       },
     }[cls.name];
   }
