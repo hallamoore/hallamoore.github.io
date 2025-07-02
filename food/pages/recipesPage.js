@@ -14,7 +14,11 @@ export default class RecipesPage extends Div {
       onResultsRetrieved: (recipes) => recipeList.setRecipes(recipes),
     });
 
-    const recipeModalForm = new RecipeModalForm({ foodApi });
+    const recipeModalForm = new RecipeModalForm({
+      title: "New Recipe",
+      submitButtonText: "Create",
+      onSubmit: foodApi.createRecipe,
+    });
 
     const parseRecipeModal = new ParseRecipeModal({
       foodApi,

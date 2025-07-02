@@ -30,7 +30,7 @@ export default class Element {
 
   setContents(...contents) {
     this.element.replaceChildren();
-    this.appendContents(...contents);
+    this.appendContents(...contents.filter(Boolean));
   }
 
   appendContents(...contents) {

@@ -1,4 +1,6 @@
-import { Div, Element } from "../../../elements/index.js";
+import { Button, Div, Element } from "../../../elements/index.js";
+import RecipeModalForm from "../recipeModalForm.js";
+
 import Ingredient from "./ingredient.js";
 import Timings from "./timings.js";
 import Panel, { PanelItem } from "./panel.js";
@@ -58,15 +60,32 @@ const Source = ({ originalSource }) =>
 
 export default class RecipeView extends Div {
   constructor({ foodApi, recipeId }) {
-    super({ contents: `recipe ${recipeId}` });
+    super({ contents: `Loading recipe ${recipeId}...` });
+
+    this.recipeModalForm = new RecipeModalForm({
+      title: "Edit Recipe",
+      submitButtonText: "Save",
+      onSubmit: (values) => foodApi.editRecipe({ id: recipeId, ...values }),
+    });
+
     this.fetchRecipe({ foodApi, recipeId });
   }
 
   async fetchRecipe({ foodApi, recipeId }) {
     const recipe = await foodApi.getRecipe({ id: recipeId, withIngredients: true });
+    this.recipeModalForm.setValues(recipe);
 
     this.setContents(
       Title(recipe),
+      this.recipeModalForm,
+      new Button({
+        contents: "Edit",
+        attrs: {
+          onClick: () => {
+            this.recipeModalForm.open();
+          },
+        },
+      }),
       new Timings(recipe),
       YieldAmount(recipe),
       Ingredients(recipe),

@@ -1,6 +1,6 @@
 import Panel, { PanelItem } from "./panel.js";
 
-const getTimeDisplay = (mins) => {
+export const getTimeDisplay = (mins) => {
   const hours = Math.floor(mins / 60);
   const hoursUnit = hours === 1 ? "hr" : "hrs";
   const hoursDisplay = hours ? `${hours} ${hoursUnit}` : "";
