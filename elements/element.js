@@ -28,6 +28,16 @@ export default class Element {
     }[cls.name];
   }
 
+  static extendWithConstantArgs(className, constantArgs) {
+    return {
+      [className]: class extends Element {
+        constructor(args) {
+          super({ ...args, ...constantArgs });
+        }
+      },
+    }[className]; // The intermediate object allows us to set the name on the class for better debugging
+  }
+
   setContents(...contents) {
     this.element.replaceChildren();
     this.appendContents(...contents.filter(Boolean));

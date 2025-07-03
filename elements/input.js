@@ -1,5 +1,5 @@
 import Element from "./element.js";
-import Label from "./label.js";
+import { Label } from "./basicElements.js";
 
 export default class Input extends Element {
   constructor({ label, ...args }) {
@@ -9,7 +9,7 @@ export default class Input extends Element {
     const input = new Input(args);
     super({
       tagName: "div",
-      contents: [new Label({ contents: label }), input]
+      contents: [new Label({ contents: label }), input],
     });
     this.input = input;
   }
