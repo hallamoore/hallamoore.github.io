@@ -1,4 +1,5 @@
 import { Button, Div } from "./index.js";
+import styler from "./styler.js";
 
 class ModalHeader extends Div {}
 
@@ -23,10 +24,24 @@ class ModalFooter extends Div {
   }
 }
 
+const modalClassName = "modal";
+
+styler.defineClass(modalClassName, (theme) => [
+  ["position", "absolute"],
+  ["left", "50%"],
+  ["top", "50%"],
+  ["transform", "translate(-50%,-50%)"],
+  ["background", theme.backgroundColor],
+  ["border", theme.border],
+  ["border-radius", theme.borderRadius.large],
+  ["padding", theme.spacer.large],
+]);
+
 export default class ModalForm extends Div {
   constructor({ title, contents, submitButtonText, onSubmit }) {
     super({
       attrs: {
+        className: modalClassName,
         style: {
           display: "none", // TODO: use class instead
         },
