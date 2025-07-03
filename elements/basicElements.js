@@ -8,5 +8,6 @@ const buildBasicElementClass = (tagName) => {
 export const Button = buildBasicElementClass("button");
 export const Div = buildBasicElementClass("div");
 export const Form = buildBasicElementClass("form");
+export const Input = buildBasicElementClass("input");
 export const Label = buildBasicElementClass("label");
 export const Textarea = buildBasicElementClass("textarea");

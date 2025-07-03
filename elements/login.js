@@ -1,13 +1,13 @@
-import { Button, Form, Input } from "./index.js";
+import { Button, Form, LabeledInput } from "./index.js";
 
 export default class Login extends Form {
   constructor({ login } = {}) {
-    const usernameInput = new Input({
+    const usernameInput = new LabeledInput({
       label: "Username:",
       attrs: { id: "username" },
     });
 
-    const passwordInput = new Input({
+    const passwordInput = new LabeledInput({
       label: "Password:",
       attrs: { id: "password", type: "password" },
     });

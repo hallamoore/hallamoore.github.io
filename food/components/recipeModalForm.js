@@ -1,4 +1,4 @@
-import { Input, ModalForm, Textarea } from "../../elements/index.js";
+import { LabeledInput, ModalForm, Textarea } from "../../elements/index.js";
 
 import { getIngredientDisplay } from "./recipeView/ingredient.js";
 import { getTimeDisplay } from "./recipeView/timings.js";
@@ -25,13 +25,13 @@ export default class RecipeModalForm extends ModalForm {
     super({
       title,
       contents: [
-        new Input({ label: "Title", attrs: { name: "title" } }),
-        new Input({ label: "Original Source", attrs: { name: "originalSource" } }),
-        new Input({ label: "Prep Time", attrs: { name: "prepTime" } }),
-        new Input({ label: "Cook Time", attrs: { name: "cookTime" } }),
-        new Input({ label: "Inactive Time", attrs: { name: "inactiveTime" } }),
-        new Input({ label: "Total Time", attrs: { name: "totalTime" } }),
-        new Input({ label: "Yield", attrs: { name: "yieldAmount" } }),
+        new LabeledInput({ label: "Title", attrs: { name: "title" } }),
+        new LabeledInput({ label: "Original Source", attrs: { name: "originalSource" } }),
+        new LabeledInput({ label: "Prep Time", attrs: { name: "prepTime" } }),
+        new LabeledInput({ label: "Cook Time", attrs: { name: "cookTime" } }),
+        new LabeledInput({ label: "Inactive Time", attrs: { name: "inactiveTime" } }),
+        new LabeledInput({ label: "Total Time", attrs: { name: "totalTime" } }),
+        new LabeledInput({ label: "Yield", attrs: { name: "yieldAmount" } }),
         new Textarea({ attrs: { name: "ingredients" } }),
         new Textarea({ attrs: { name: "directions" } }),
         new Textarea({ attrs: { name: "notes" } }),

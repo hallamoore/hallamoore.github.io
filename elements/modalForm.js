@@ -1,4 +1,4 @@
-import { Button, Div } from "./index.js";
+import { Button, Div } from "./basicElements.js";
 import styler from "./styler.js";
 
 class ModalHeader extends Div {}
