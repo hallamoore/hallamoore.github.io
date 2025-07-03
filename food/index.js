@@ -1,5 +1,4 @@
-import NotFound from "../elements/notFound.js";
-import Login from "../elements/login.js";
+import { Login, NotFound } from "../elements/index.js";
 import Router from "../router/index.js";
 
 import RecipeView from "./components/recipeView/index.js";

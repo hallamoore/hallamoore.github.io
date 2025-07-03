@@ -1,6 +1,4 @@
 import { Element } from "../elements/index.js";
-import Login from "../elements/login.js";
-import NotFound from "../elements/notFound.js";
 import { getCookie } from "../cookies.js";
 
 const PATH_VAR = Symbol("PATH_VAR");

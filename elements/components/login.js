@@ -1,4 +1,5 @@
-import { Button, Form, LabeledInput } from "./index.js";
+import { Button, Form } from "../basicElements.js";
+import LabeledInput from "./labeledInput.js";
 
 export default class Login extends Form {
   constructor({ login } = {}) {

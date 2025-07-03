@@ -1,4 +1,4 @@
-import { Div } from "./index.js";
+import { Div } from "../basicElements.js";
 
 export default class NotFound extends Div {
   constructor() {

@@ -1,4 +1,4 @@
-import { Div, Input, Label } from "./basicElements.js";
+import { Div, Input, Label } from "../basicElements.js";
 
 export default class LabeledInput extends Div {
   constructor({ label, attrs }) {
