@@ -4,7 +4,7 @@ export default class ParseRecipeModal extends ModalForm {
   constructor({ foodApi, onParsed }) {
     super({
       title: "New recipe from url",
-      contents: [new LabeledInput({ label: "Url", attrs: { name: "url" } })],
+      contents: [new LabeledInput({ label: "Url", name: "url" })],
       submitButtonText: "Import",
       onSubmit: async ({ url }) => {
         const { ingredients, directions, notes, ...parsed } = await foodApi.parseRecipeFromUrl({

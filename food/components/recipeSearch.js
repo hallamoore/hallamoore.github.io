@@ -7,19 +7,15 @@ export default class RecipeSearch extends Div {
     this.onResultsRetrieved = onResultsRetrieved;
 
     const recipeSearchInput = new Input({
-      attrs: {
-        ariaLabel: "Search",
-      },
+      ariaLabel: "Search",
     });
 
     const recipeSearchButton = new Button({
       contents: "Search",
-      attrs: {
-        onClick: () => {
-          const searchQuery = recipeSearchInput.value;
-          window.router.pushQueryParam("q", searchQuery);
-          this.search(searchQuery);
-        },
+      onClick: () => {
+        const searchQuery = recipeSearchInput.value;
+        window.router.pushQueryParam("q", searchQuery);
+        this.search(searchQuery);
       },
     });
 

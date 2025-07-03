@@ -12,7 +12,7 @@ const Title = ({ title }) =>
   new Element({
     tagName: "h1",
     contents: title,
-    attrs: { style: { margin: "10px", textAlign: "center" } },
+    style: { margin: "10px", textAlign: "center" },
   });
 
 const YieldAmount = ({ yieldAmount }) =>
@@ -53,7 +53,7 @@ const Source = ({ originalSource }) =>
       new Element({
         tagName: "a",
         contents: originalSource,
-        attrs: { href: originalSource },
+        href: originalSource,
       }),
     ],
   });
@@ -80,10 +80,8 @@ export default class RecipeView extends Div {
       this.recipeModalForm,
       new Button({
         contents: "Edit",
-        attrs: {
-          onClick: () => {
-            this.recipeModalForm.open();
-          },
+        onClick: () => {
+          this.recipeModalForm.open();
         },
       }),
       new Timings(recipe),

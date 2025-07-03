@@ -3,7 +3,7 @@ const attrRenames = {
 };
 
 export default class Element {
-  constructor({ tagName, attrs = {}, contents }) {
+  constructor({ tagName, contents, ...attrs }) {
     this.element = document.createElement(tagName);
 
     for (let [key, value] of Object.entries(attrs)) {

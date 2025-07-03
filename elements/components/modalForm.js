@@ -9,15 +9,11 @@ class ModalFooter extends Div {
       contents: [
         new Button({
           contents: submitButtonText,
-          attrs: {
-            onClick: onSubmit,
-          },
+          onClick: onSubmit,
         }),
         new Button({
           contents: "Cancel",
-          attrs: {
-            onClick: onCancel,
-          },
+          onClick: onCancel,
         }),
       ],
     });
@@ -40,11 +36,9 @@ styler.defineClass(modalClassName, (theme) => [
 export default class ModalForm extends Div {
   constructor({ title, contents, submitButtonText, onSubmit }) {
     super({
-      attrs: {
-        className: modalClassName,
-        style: {
-          display: "none", // TODO: use class instead
-        },
+      className: modalClassName,
+      style: {
+        display: "none", // TODO: use class instead
       },
     });
 

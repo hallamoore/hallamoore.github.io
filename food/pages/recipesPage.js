@@ -30,10 +30,8 @@ export default class RecipesPage extends Div {
 
     const parseRecipeButton = new Button({
       contents: "New From Url",
-      attrs: {
-        onClick: () => {
-          parseRecipeModal.open();
-        },
+      onClick: () => {
+        parseRecipeModal.open();
       },
     });
 

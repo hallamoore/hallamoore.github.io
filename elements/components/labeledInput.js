@@ -1,8 +1,8 @@
 import { Div, Input, Label } from "../basicElements.js";
 
 export default class LabeledInput extends Div {
-  constructor({ label, attrs }) {
-    const input = new Input({ attrs });
+  constructor({ label, ...attrs }) {
+    const input = new Input(attrs);
     super({
       contents: [new Label({ contents: label }), input],
     });

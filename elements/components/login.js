@@ -5,12 +5,13 @@ export default class Login extends Form {
   constructor({ login } = {}) {
     const usernameInput = new LabeledInput({
       label: "Username:",
-      attrs: { id: "username" },
+      id: "username",
     });
 
     const passwordInput = new LabeledInput({
       label: "Password:",
-      attrs: { id: "password", type: "password" },
+      id: "password",
+      type: "password",
     });
 
     super({
@@ -19,14 +20,12 @@ export default class Login extends Form {
         passwordInput,
         new Button({
           contents: "Login",
-          attrs: {
-            type: "button",
-            onClick: () => {
-              login({
-                username: usernameInput.value,
-                password: passwordInput.value,
-              });
-            },
+          type: "button",
+          onClick: () => {
+            login({
+              username: usernameInput.value,
+              password: passwordInput.value,
+            });
           },
         }),
       ],

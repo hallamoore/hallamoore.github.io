@@ -5,10 +5,8 @@ class RecipeItem extends Element {
     super({
       tagName: "li",
       contents: title,
-      attrs: {
-        onClick: () => {
-          window.history.pushState(window.history.state, "", `/food/${id}`);
-        },
+      onClick: () => {
+        window.history.pushState(window.history.state, "", `/food/${id}`);
       },
     });
   }
@@ -18,9 +16,7 @@ export default class RecipeList extends Element {
   constructor(recipes) {
     super({
       tagName: "ul",
-      attrs: {
-        ariaLabel: "Recipe Search Results",
-      },
+      ariaLabel: "Recipe Search Results",
     });
     this.setRecipes(recipes);
   }
