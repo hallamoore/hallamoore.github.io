@@ -62,22 +62,31 @@ export default class RecipeView extends Div {
   constructor({ foodApi, recipeId }) {
     super({ contents: `Loading recipe ${recipeId}...` });
 
+    this.foodApi = foodApi;
+    this.recipeId = recipeId;
+
     this.recipeModalForm = new RecipeModalForm({
       title: "Edit Recipe",
       submitButtonText: "Save",
       onSubmit: (values) => foodApi.editRecipe({ id: recipeId, ...values }),
     });
-
-    this.fetchRecipe({ foodApi, recipeId });
   }
 
-  async fetchRecipe({ foodApi, recipeId }) {
-    const recipe = await foodApi.getRecipe({ id: recipeId, withIngredients: true });
+  _init() {
+    super._init();
+    // Need to initialize the inputs in the modal form so that they exist when we try
+    // to set their values. We want to set the values before we render the trigger button.
+    this.recipeModalForm.init();
+    this.fetchRecipe(); // don't await
+  }
+
+  async fetchRecipe() {
+    const recipe = await this.foodApi.getRecipe({ id: this.recipeId, withIngredients: true });
     this.recipeModalForm.setValues(recipe);
 
     this.setContents(
       Title(recipe),
-      this.recipeModalForm,
+      this.recipeModalForm.ignoreNextInit(),
       new Button({
         contents: "Edit",
         onClick: () => {

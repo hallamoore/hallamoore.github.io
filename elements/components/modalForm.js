@@ -40,22 +40,19 @@ export default class ModalForm extends Div {
       style: {
         display: "none", // TODO: use class instead
       },
+      contents: [
+        new ModalHeader({ contents: title }),
+        contents,
+        new ModalFooter({
+          submitButtonText,
+          onSubmit: async () => {
+            await onSubmit(this._getValues());
+            this.close();
+          },
+          onCancel: () => this.close(),
+        }),
+      ],
     });
-
-    this.setContents(
-      new ModalHeader({
-        contents: title,
-      }),
-      contents,
-      new ModalFooter({
-        submitButtonText,
-        onSubmit: async () => {
-          await onSubmit(this._getValues());
-          this.close();
-        },
-        onCancel: () => this.close(),
-      })
-    );
   }
 
   open() {

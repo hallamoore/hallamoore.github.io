@@ -62,11 +62,11 @@ export default class Router {
     }
 
     if (component.prototype instanceof Element || component === Element) {
-      return new component(args).element;
+      return new component(args).init().element;
     }
 
     const element = component(args);
-    return element instanceof Element ? element.element : element;
+    return element instanceof Element ? element.init().element : element;
   }
 
   isLoggedIn() {

@@ -39,12 +39,18 @@ export default class RecipesPage extends Div {
       contents: [recipeModalForm, parseRecipeModal, parseRecipeButton, recipeSearch, recipeList],
     });
 
-    this.fetchInitialRecipes(foodApi, recipeList);
+    this.foodApi = foodApi;
+    this.recipeList = recipeList;
   }
 
-  async fetchInitialRecipes(foodApi, recipeList) {
+  _init() {
+    super._init();
+    this.fetchInitialRecipes(); // don't await
+  }
+
+  async fetchInitialRecipes() {
     // TODO: loading indicator
     // TODO: cancel if a search is made before this loads
-    recipeList.setRecipes(await foodApi.getRecipes());
+    this.recipeList.setRecipes(await this.foodApi.getRecipes());
   }
 }

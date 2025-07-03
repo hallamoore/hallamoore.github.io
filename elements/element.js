@@ -14,9 +14,36 @@ export default class Element {
       }
     }
 
-    if (contents) {
-      this.appendContents(contents);
+    this.initialContents = contents;
+    this.initializing = false;
+    this.initialized = false;
+  }
+
+  init() {
+    if (this._ignoreNextInit) {
+      this._ignoreNextInit = false;
+      return this;
     }
+
+    if (this.initialized) throw new Error("Init called more than once");
+
+    this.initializing = true;
+    this._init();
+    this.initialized = true;
+    this.initializing = false;
+
+    return this;
+  }
+
+  _init() {
+    if (this.initialContents) {
+      this.appendContents(this.initialContents);
+    }
+  }
+
+  ignoreNextInit() {
+    this._ignoreNextInit = true;
+    return this;
   }
 
   static with(initialArgs) {
@@ -40,17 +67,21 @@ export default class Element {
 
   setContents(...contents) {
     this.element.replaceChildren();
-    this.appendContents(...contents.filter(Boolean));
+    this.appendContents(...contents);
   }
 
   appendContents(...contents) {
-    for (let content of contents) {
+    if (!this.initializing && !this.initialized) {
+      throw new Error("appendContents called before initialization");
+    }
+
+    for (let content of contents.filter(Boolean)) {
       if (typeof content === "string") {
         this.element.append(content);
       } else if (Array.isArray(content)) {
         this.appendContents(...content);
       } else if (content instanceof Element) {
-        this.element.appendChild(content.element);
+        this.element.appendChild(content.init().element);
       } else {
         this.element.appendChild(content);
       }

@@ -17,11 +17,11 @@ export default class RecipeList extends Element {
     super({
       tagName: "ul",
       ariaLabel: "Recipe Search Results",
+      contents: recipes.map((r) => new RecipeItem(r)),
     });
-    this.setRecipes(recipes);
   }
 
   setRecipes(recipes) {
-    this.element.replaceChildren(...recipes.map((r) => new RecipeItem(r).element));
+    this.setContents(...recipes.map((r) => new RecipeItem(r)));
   }
 }

@@ -2,10 +2,6 @@ import { Button, Div, Input } from "../../elements/index.js";
 
 export default class RecipeSearch extends Div {
   constructor({ onResultsRetrieved }) {
-    super();
-
-    this.onResultsRetrieved = onResultsRetrieved;
-
     const recipeSearchInput = new Input({
       ariaLabel: "Search",
     });
@@ -19,7 +15,9 @@ export default class RecipeSearch extends Div {
       },
     });
 
-    this.setContents(recipeSearchInput, recipeSearchButton);
+    super({ contents: [recipeSearchInput, recipeSearchButton] });
+
+    this.onResultsRetrieved = onResultsRetrieved;
 
     const searchQuery = window.router.getQueryParam("q");
     if (searchQuery) {
