@@ -1,14 +1,13 @@
 import { Div, Element } from "../../../elements/index.js";
 import styler from "../../styler.js";
 
-const panelItemClassName = "panel-item";
-styler.defineClass(panelItemClassName, (theme) => [["margin", `${theme.spacer} 0px`]]);
+const panelItemCls = styler.defineClass("panel-item", (theme) => [
+  ["margin", `${theme.spacer} 0px`],
+]);
 
-export const PanelItem = Div.extend({ className: panelItemClassName });
+export const PanelItem = Div.extend({ className: panelItemCls.name });
 
-const panelClassName = "panel";
-
-styler.defineClass(panelClassName, (theme) => [
+const panelCls = styler.defineClass("panel", (theme) => [
   ["box-shadow", theme.boxShadow],
   ["margin", `${theme.spacer.large} ${theme.spacer}`],
   ["border-radius", theme.borderRadius],
@@ -18,7 +17,7 @@ styler.defineClass(panelClassName, (theme) => [
 export default class Panel extends Div {
   constructor({ title, contents }) {
     super({
-      className: panelClassName,
+      className: panelCls.name,
       contents: [
         new Element({
           tagName: "h3",

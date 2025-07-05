@@ -25,5 +25,7 @@ export default class Styler {
     const innerValues = styles.map(([key, value]) => `  ${key}: ${value};`).join("\n");
     const rule = `.${className} {\n${innerValues}\n}`;
     this.stylesheet.insertRule(rule);
+
+    return { name: className };
   }
 }

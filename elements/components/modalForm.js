@@ -20,9 +20,7 @@ class ModalFooter extends Div {
   }
 }
 
-const modalClassName = "modal";
-
-styler.defineClass(modalClassName, (theme) => [
+const modalCls = styler.defineClass("modal", (theme) => [
   ["position", "absolute"],
   ["left", "50%"],
   ["top", "50%"],
@@ -36,7 +34,7 @@ styler.defineClass(modalClassName, (theme) => [
 export default class ModalForm extends Div {
   constructor({ title, contents, submitButtonText, onSubmit }) {
     super({
-      className: modalClassName,
+      className: modalCls.name,
       style: {
         display: "none", // TODO: use class instead
       },
