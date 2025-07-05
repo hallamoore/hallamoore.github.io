@@ -55,7 +55,7 @@ export default class Element {
     }[cls.name];
   }
 
-  static extendWithConstantArgs(className, constantArgs) {
+  static extend(className, constantArgs) {
     return {
       [className]: class extends Element {
         constructor(args) {

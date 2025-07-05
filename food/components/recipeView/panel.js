@@ -4,11 +4,7 @@ import styler from "../../styler.js";
 const panelItemClassName = "panel-item";
 styler.defineClass(panelItemClassName, (theme) => [["margin", `${theme.spacer} 0px`]]);
 
-export class PanelItem extends Div {
-  constructor(args) {
-    super({ ...args, className: panelItemClassName });
-  }
-}
+export const PanelItem = Div.extend({ className: panelItemClassName });
 
 const panelClassName = "panel";
 
