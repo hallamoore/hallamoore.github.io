@@ -1,17 +1,11 @@
 import { Element } from "../elements/index.js";
 import { getCookie } from "../cookies.js";
 
+const CALLBACK = Symbol("CALLBACK");
 const PATH_VAR = Symbol("PATH_VAR");
 const PATH_VAR_NAME = Symbol("PATH_VAR_NAME");
-const COMPONENT = Symbol("COMPONENT");
-const REQUIRE_AUTH = Symbol("REQUIRE_AUTH");
-const PATH_VAR_REGEXP = new RegExp(/^{([^{}]*)}$/);
 
-export class Redirect {
-  constructor(path) {
-    this.path = path;
-  }
-}
+const PATH_VAR_REGEXP = new RegExp(/^{([^{}]*)}$/);
 
 const getPathParts = (path) => path.split("/").filter((p) => p !== "");
 
@@ -26,12 +20,25 @@ export default class Router {
     this.routes = {};
 
     if (loginComponent) {
-      this.addRoute("/login", loginComponent, { requireAuth: false });
+      this.renderComponentOnRoute("/login", loginComponent, { requireAuth: false });
     }
   }
 
-  addRoute(path, component, { requireAuth } = {}) {
-    const parts = getPathParts(this.prefix + path);
+  wrapCallbackWithAuthCheck(callback) {
+    return (...args) => {
+      if (!this.isLoggedIn()) {
+        return this.redirect("/login");
+      }
+      return callback(...args);
+    };
+  }
+
+  onRoute(pathTemplate, callback, { requireAuth } = {}) {
+    if (requireAuth ?? this.defaultRequireAuth) {
+      callback = this.wrapCallbackWithAuthCheck(callback);
+    }
+
+    const parts = getPathParts(this.prefix + pathTemplate);
     let routes = this.routes;
     for (let part of parts) {
       const match = PATH_VAR_REGEXP.exec(part);
@@ -47,20 +54,21 @@ export default class Router {
         routes = routes[part];
       }
     }
-    routes[COMPONENT] = component;
-    routes[REQUIRE_AUTH] = requireAuth ?? this.defaultRequireAuth;
+    routes[CALLBACK] = callback;
+  }
+
+  renderComponentOnRoute(pathTemplate, component, { requireAuth } = {}) {
+    this.onRoute(
+      pathTemplate,
+      ({ pathVars }) => {
+        const element = this.buildElementFromComponent(component, pathVars);
+        document.body.replaceChildren(element);
+      },
+      { requireAuth }
+    );
   }
 
   buildElementFromComponent(component, args) {
-    if (component instanceof Redirect) {
-      window.history.pushState(
-        { originalUrl: window.location.href },
-        "",
-        window.location.origin + this.prefix + component.path
-      );
-      return null;
-    }
-
     if (component.prototype instanceof Element || component === Element) {
       return new component(args).init().element;
     }
@@ -73,66 +81,60 @@ export default class Router {
     return getCookie(this.sessionCookieName);
   }
 
-  getComponentAndVarsForPath(path) {
-    const vars = {};
-    const parts = getPathParts(path);
+  redirect(path) {
+    window.history.pushState(
+      { originalUrl: window.location.href },
+      "",
+      window.location.origin + this.prefix + path
+    );
+  }
+
+  onRouteNotFound() {
+    if (this.defaultRequireAuth && !this.isLoggedIn()) {
+      return this.redirect("/login");
+    }
+    const element = this.buildElementFromComponent(this.notFoundComponent);
+    document.body.replaceChildren(element);
+  }
+
+  loadRoute() {
+    let path = window.location.pathname;
+    const pathVars = {};
+    const pathParts = getPathParts(path);
+    console.log(this);
     let routes = this.routes;
 
-    for (let part of parts) {
+    for (let part of pathParts) {
       if (routes[part] !== undefined) {
         routes = routes[part];
         continue;
       }
       if (routes[PATH_VAR] === undefined) {
-        if (this.defaultRequireAuth && !this.isLoggedIn()) {
-          return { component: new Redirect("/login"), vars };
-        }
-        return { component: this.notFoundComponent, vars };
+        return this.onRouteNotFound();
       }
       routes = routes[PATH_VAR];
-      vars[routes[PATH_VAR_NAME]] = part;
+      pathVars[routes[PATH_VAR_NAME]] = part;
     }
 
-    if (routes[COMPONENT] === undefined) {
-      if (this.defaultRequireAuth && !this.isLoggedIn()) {
-        return { component: new Redirect("/login"), vars };
-      }
-      return { component: this.notFoundComponent, vars };
+    if (routes[CALLBACK] === undefined) {
+      return this.onRouteNotFound();
     }
 
-    if (routes[REQUIRE_AUTH] && !this.isLoggedIn()) {
-      return { component: new Redirect("/login"), vars };
-    }
-
-    return { component: routes[COMPONENT], vars };
+    return routes[CALLBACK]({ path, pathVars });
   }
-
-  renderRoute = () => {
-    let path = window.location.pathname;
-    const { component, vars } = this.getComponentAndVarsForPath(path);
-    const element = this.buildElementFromComponent(component, vars);
-
-    // example of when element is `null` and we specifically don't want to
-    // replace children is /food/test. The tester attaches an iframe itself,
-    // and we can't just return the iframe and attach it here because it also
-    // starts running the tests, which requires the iframe to already be
-    // attached.
-    if (element) {
-      document.body.replaceChildren(element);
-    }
-  };
 
   attach() {
     const origPushState = window.history.pushState;
-    window.history.pushState = (state, _, url, { render = true } = {}) => {
+    window.history.pushState = (state, _, url, { loadRoute = true } = {}) => {
       origPushState.call(window.history, state, _, url);
-      if (render) {
-        this.renderRoute();
+      if (loadRoute) {
+        this.loadRoute();
       }
     };
-    window.onpopstate = this.renderRoute;
-    window.onload = this.renderRoute;
+    window.onpopstate = this.loadRoute.bind(this);
+    window.onload = this.loadRoute.bind(this);
     window.router = this;
+    return this;
   }
 
   pushQueryParam(key, value) {
@@ -140,7 +142,7 @@ export default class Router {
     const qParams = new URLSearchParams(qParamsString);
     qParams.set(key, value);
     window.history.pushState(window.history.state, "", `${url}?${qParams}`, {
-      render: false,
+      loadRoute: false,
     });
   }
 

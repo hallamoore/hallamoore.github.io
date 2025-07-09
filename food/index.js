@@ -22,12 +22,9 @@ const router = new Router({
   loginComponent: Login.with({ login: foodApi.login }),
 });
 
-router.addRoute("/", RecipesPage.with({ foodApi }));
-router.addRoute("/logout", () => foodApi.logout());
-router.addRoute("/{recipeId}", RecipeView.with({ foodApi }));
-router.addRoute("/test", () => {
-  runTests();
-  return null;
-});
+router.renderComponentOnRoute("/", RecipesPage.with({ foodApi }));
+router.renderComponentOnRoute("/{recipeId}", RecipeView.with({ foodApi }));
+router.onRoute("/logout", () => foodApi.logout());
+router.onRoute("/test", runTests);
 
 router.attach();
